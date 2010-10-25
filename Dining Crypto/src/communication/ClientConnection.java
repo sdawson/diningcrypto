@@ -1,9 +1,8 @@
 package communication;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -18,13 +17,13 @@ public class ClientConnection {
 	
 	public void send(Message message) throws IOException {
 		Socket socket = null;
-		PrintWriter out = null;
-		BufferedReader in = null;
-		
+		ObjectOutputStream objectOut= null;
+		ObjectInputStream objectIn = null;
+
 		try {
 			socket = new Socket(serverAddress, serverPort);
-			out = new PrintWriter(socket.getOutputStream(), true);
-			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			objectOut = new ObjectOutputStream(socket.getOutputStream());
+			objectIn = new ObjectInputStream(socket.getInputStream());
 		} catch (UnknownHostException e) {
 			System.err.println("Error: Couldn't find host");
 			System.exit(1);
@@ -33,11 +32,17 @@ public class ClientConnection {
 			System.exit(1);
 		}
 		
-		out.println(message.getMessage());
-		System.out.println("echo: " + in.readLine());
+		objectOut.writeObject(message);
+		Message reply = null;
+		try {
+			reply = (Message) objectIn.readObject();
+			System.out.println("returns: " + reply.getMessage());
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
 		
-		out.close();
-		in.close();
+		objectIn.close();
+		objectOut.close();
 		socket.close();
 	}
 	

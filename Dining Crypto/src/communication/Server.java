@@ -1,9 +1,8 @@
 package communication;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -12,6 +11,7 @@ public class Server {
 	
 	public static void main(String[] args) throws IOException {
 		ServerSocket serverSocket = null;
+
 		try {
 			serverSocket = new ServerSocket(PORT);
 		} catch (IOException e) {
@@ -27,16 +27,19 @@ public class Server {
 			System.exit(1);
 		}
 		
-		PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-		BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-		String inputLine;
+		ObjectOutputStream objectOut = new ObjectOutputStream(clientSocket.getOutputStream());
+		ObjectInputStream objectIn = new ObjectInputStream(clientSocket.getInputStream());
 		
-		while ((inputLine = in.readLine()) != null) {
-			System.out.println("received " + inputLine);
-			out.println(inputLine);
+		try {
+			Message stuff = (Message) objectIn.readObject();
+			System.out.println("received " + stuff.getMessage());
+			Message finalMessage = new Message("fldkfjs");
+			objectOut.writeObject(finalMessage);
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
 		}
-		out.close();
-		in.close();
+		objectOut.close();
+		objectIn.close();
 		clientSocket.close();
 		serverSocket.close();
 	}
