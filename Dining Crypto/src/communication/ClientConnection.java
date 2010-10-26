@@ -24,25 +24,27 @@ public class ClientConnection {
 			in = new ObjectInputStream(socket.getInputStream());
 			out = new ObjectOutputStream(socket.getOutputStream());
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println("Error: Unknown host");
+			System.exit(1);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			System.exit(1);
 		}
 	}
 	
 	public void send(Message message) throws IOException {
-		
 		out.writeObject(message);
-		Message reply = null;
+	}
+
+	public Message receive() throws IOException {
+		Message newMessage = null;
 		try {
-			reply = (Message) in.readObject();
-			System.out.println("returns: " + reply.getMessage());
+			newMessage = (Message) in.readObject();
+			System.out.println("returns: " + newMessage.getMessage());
 		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
+			return null;
 		}
-		
+		return newMessage;
 	}
 	
 	public void disconnect() {
@@ -51,13 +53,8 @@ public class ClientConnection {
 			out.close();
 			socket.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
-	public Message receive() {
-		return null;
-		// More stuff
-	}
+
 }

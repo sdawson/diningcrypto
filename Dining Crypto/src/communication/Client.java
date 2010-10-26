@@ -11,8 +11,10 @@ public class Client {
 		connect.connect();
 		try {
 			connect.send(m);
+			Message reply = connect.receive();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		connect.disconnect();
 	}
 }
