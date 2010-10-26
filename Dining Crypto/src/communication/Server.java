@@ -10,37 +10,18 @@ public class Server {
 	public static final int PORT = 9876;
 	
 	public static void main(String[] args) throws IOException {
-		ServerSocket serverSocket = null;
-
-		try {
-			serverSocket = new ServerSocket(PORT);
-		} catch (IOException e) {
-			System.err.println("Error: IO Error on server socket initialization.");
-			System.exit(1);
-		}
+		ServerConnection connection = new ServerConnection(PORT);
 		
-		Socket clientSocket = null;
-		try {
-			clientSocket = serverSocket.accept();
-		} catch (IOException e) {
-			System.err.println("Error: Client connection accept failure");
-			System.exit(1);
-		}
-		
-		ObjectOutputStream objectOut = new ObjectOutputStream(clientSocket.getOutputStream());
-		ObjectInputStream objectIn = new ObjectInputStream(clientSocket.getInputStream());
+		connection.acceptConnection();
 		
 		try {
-			Message stuff = (Message) objectIn.readObject();
+			Message stuff = (Message) connection.getInputStream().readObject();
 			System.out.println("received " + stuff.getMessage());
 			Message finalMessage = new Message("fldkfjs");
-			objectOut.writeObject(finalMessage);
+			connection.getOutputStream().writeObject(finalMessage);
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
-		objectOut.close();
-		objectIn.close();
-		clientSocket.close();
-		serverSocket.close();
+
 	}
 }

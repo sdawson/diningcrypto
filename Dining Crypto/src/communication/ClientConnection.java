@@ -21,8 +21,11 @@ public class ClientConnection {
 	public void connect() {
 		try {
 			socket = new Socket(serverAddress, serverPort);
-			in = new ObjectInputStream(socket.getInputStream());
+			System.out.println("pre client stream collection");
+			// Output stream creation goes first to avoid blocking
 			out = new ObjectOutputStream(socket.getOutputStream());
+			in = new ObjectInputStream(socket.getInputStream());
+			System.out.println("post client stream collection");
 		} catch (UnknownHostException e) {
 			System.err.println("Error: Unknown host");
 			System.exit(1);
