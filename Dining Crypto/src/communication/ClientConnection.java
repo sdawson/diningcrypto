@@ -9,41 +9,51 @@ import java.net.UnknownHostException;
 public class ClientConnection {
 	private String serverAddress;
 	private int serverPort;
+	private Socket socket = null;
+	ObjectInputStream in = null;
+	ObjectOutputStream out = null;
 	
 	public ClientConnection(String serverAddress, int serverPort) {
 		this.serverAddress = serverAddress;
 		this.serverPort = serverPort;
 	}
 	
-	public void send(Message message) throws IOException {
-		Socket socket = null;
-		ObjectOutputStream objectOut= null;
-		ObjectInputStream objectIn = null;
-
+	public void connect() {
 		try {
 			socket = new Socket(serverAddress, serverPort);
-			objectOut = new ObjectOutputStream(socket.getOutputStream());
-			objectIn = new ObjectInputStream(socket.getInputStream());
+			in = new ObjectInputStream(socket.getInputStream());
+			out = new ObjectOutputStream(socket.getOutputStream());
 		} catch (UnknownHostException e) {
-			System.err.println("Error: Couldn't find host");
-			System.exit(1);
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} catch (IOException e) {
-			System.err.println("Error: IO error when connecting to " + serverAddress);
-			System.exit(1);
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+	}
+	
+	public void send(Message message) throws IOException {
 		
-		objectOut.writeObject(message);
+		out.writeObject(message);
 		Message reply = null;
 		try {
-			reply = (Message) objectIn.readObject();
+			reply = (Message) in.readObject();
 			System.out.println("returns: " + reply.getMessage());
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
 		
-		objectIn.close();
-		objectOut.close();
-		socket.close();
+	}
+	
+	public void disconnect() {
+		try {
+			in.close();
+			out.close();
+			socket.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public Message receive() {

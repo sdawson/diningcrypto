@@ -8,6 +8,7 @@ public class Client {
 		
 		Message m = new Message("Hello world");
 		ClientConnection connect = new ClientConnection("localhost", 9876);
+		connect.connect();
 		try {
 			connect.send(m);
 		} catch (IOException e) {
