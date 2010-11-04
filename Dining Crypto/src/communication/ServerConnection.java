@@ -25,7 +25,7 @@ public class ServerConnection {
 		try {
 			System.out.println("waiting for client to connect");
 			clientSocket = serverSocket.accept();
-			System.out.println("a client has connected");
+			System.out.println("a client has connected " + clientSocket.toString());
 			out = new ObjectOutputStream(clientSocket.getOutputStream());
 			in = new ObjectInputStream(clientSocket.getInputStream());
 			System.out.println("in/out streams have been setup");
