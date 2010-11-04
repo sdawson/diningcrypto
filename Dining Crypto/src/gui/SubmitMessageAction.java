@@ -1,0 +1,57 @@
+package gui;
+
+import java.awt.event.ActionEvent;
+import java.beans.PropertyChangeListener;
+
+import javax.swing.Action;
+
+public class SubmitMessageAction implements Action {
+	static String NAME = "Submit";
+
+	public SubmitMessageAction() {
+
+	}
+	
+	@Override
+	public void addPropertyChangeListener(PropertyChangeListener arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Object getValue(String arg0) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean isEnabled() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void putValue(String arg0, Object arg1) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void removePropertyChangeListener(PropertyChangeListener arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setEnabled(boolean arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		System.out.println("Submiting text to SubmitMessageAction! Action not full implemented yet. - J");
+		
+	}
+
+}
