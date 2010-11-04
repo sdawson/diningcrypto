@@ -13,7 +13,7 @@ public class Client {
 		System.out.println("post client->server connect");
 		try {
 			connect.send(m);
-			System.out.println("post cleint message send");
+			System.out.println("post client message send");
 			Message reply = connect.receive();
 		} catch (IOException e) {
 			e.printStackTrace();

@@ -14,14 +14,14 @@ public class Server {
 		
 		connection.acceptConnection();
 		
-		try {
-			Message stuff = (Message) connection.getInputStream().readObject();
-			System.out.println("received " + stuff.getMessage());
-			Message finalMessage = new Message("fldkfjs");
-			connection.getOutputStream().writeObject(finalMessage);
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
+		/*Message stuff = (Message) connection.getInputStream().readObject();
+		System.out.println("received " + stuff.getMessage());
+		Message finalMessage = new Message("fldkfjs");
+		connection.getOutputStream().writeObject(finalMessage);*/
+		Message stuff = connection.receive();
+		System.out.println("received " + stuff.getMessage());
+		Message finalMessage = new Message("working recv/send server connection.");
+		connection.send(finalMessage);
 
 	}
 }
