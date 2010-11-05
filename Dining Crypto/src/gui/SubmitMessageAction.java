@@ -1,15 +1,30 @@
 package gui;
 
+import interfaces.Input;
+
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeListener;
 
 import javax.swing.Action;
+import javax.swing.JTextField;
 
 public class SubmitMessageAction implements Action {
-	static String NAME = "Submit";
+	static String NAME = "NAME";
+	private String name = "Submit";
+	
+	private JTextField textEntryBox;
+	
+	private Input submitInput;
 
 	public SubmitMessageAction() {
-
+		
+	}
+	
+	public void setInput(Input input) {
+		submitInput = input;
+	}
+	public void setInputBox(JTextField textEntryBox) {
+		this.textEntryBox = textEntryBox;
 	}
 	
 	@Override
@@ -19,9 +34,11 @@ public class SubmitMessageAction implements Action {
 	}
 
 	@Override
-	public Object getValue(String arg0) {
-		// TODO Auto-generated method stub
-		return null;
+	public Object getValue(String key) {
+		if (key.equals(NAME))
+			return name;
+		else
+			return null;
 	}
 
 	@Override
@@ -50,8 +67,11 @@ public class SubmitMessageAction implements Action {
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
-		System.out.println("Submiting text to SubmitMessageAction! Action not full implemented yet. - J");
+		// Pass the string on to the next layer.
+		submitInput.inputString(textEntryBox.getText());
 		
+		// Clear the submission box.
+		textEntryBox.setText("");
 	}
 
 }
