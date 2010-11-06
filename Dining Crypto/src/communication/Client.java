@@ -15,6 +15,7 @@ public class Client {
 			connect.send(m);
 			System.out.println("post client message send");
 			Message reply = connect.receive();
+			System.out.println("returns: " + reply.getMessage());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

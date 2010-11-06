@@ -43,7 +43,6 @@ public class ClientConnection {
 		Message newMessage = null;
 		try {
 			newMessage = (Message) in.readObject();
-			System.out.println("returns: " + newMessage.getMessage());
 		} catch (ClassNotFoundException e) {
 			return null;
 		}

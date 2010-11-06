@@ -13,9 +13,9 @@ public class Message implements Serializable {
 	private static final int base = (int) '@'; // @ represents no msg
 	private static final int alphaSize = 27;
 	
-	public Message(String message, ArrayList<Key> keys) {
+	public Message(String message) {
 		this.message = message;
-		this.keys = keys;
+		this.keys = null;
 	}
 	
 	public Message(char indMessage, ArrayList<Key> keys) {
