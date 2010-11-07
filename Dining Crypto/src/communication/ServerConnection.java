@@ -68,6 +68,21 @@ public class ServerConnection {
 		}
 	}
 	
+	public void sendOutputWithAck(ArrayList<ClientSocketInfo> clients,
+			Message result) throws IOException {
+		for (ClientSocketInfo c : clients) {
+			c.getOutputStream().writeObject(result);
+			// Wait for acknowledgement before sending the result to the next client
+			Message reply = receive(c);
+			if (reply.getMessage().equals(new String("OK"))) {
+				continue;
+			} else {
+				System.err.println("Error: Sending result for the round failed.");
+				System.exit(1);
+			}
+		}
+	}
+	
 	public void disconnect() throws IOException {
 		serverSocket.close();
 	}

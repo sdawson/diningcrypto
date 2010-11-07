@@ -9,13 +9,13 @@ public class ServerProtocol {
 	private ServerConnection connection = null;
 	private ArrayList<ClientSocketInfo> clients = null;
 	private HashMap<ClientSocketInfo, KeySet> clientKeys = null;
+	private char result;
 	
 	// Server-side system states
 	private static final int INITIAL = 0;
-	private static final int SENTKEYS = 1; // Bypassed by server connection abstraction. Remove
-	private static final int STARTROUND = 2;
-	private static final int WAITFOROUTPUT = 3;
-	private static final int BROADCASTINGRESULT = 4;
+	private static final int STARTROUND = 1;
+	private static final int WAITFOROUTPUT = 2;
+	private static final int BROADCASTRESULT = 3;
 
 	// Client-side system states
 	private static final int WAITFORKEYS = 5;
@@ -31,10 +31,9 @@ public class ServerProtocol {
 		this.clients = clients;
 	}
 	
-	// Do i even need to return strings at this point??
-	// This function could possibly just be called repeatedly
+	// This function should just be called repeatedly
 	// in a while(readline() != null) { processInputToServer(inputLine) } etc
-	public void processInputToServer(String input) {
+	public void processInputToServer(String input) throws IOException {
 		String output = null;
 		
 		if (serverState == INITIAL) {
@@ -44,15 +43,26 @@ public class ServerProtocol {
 				// (assuming a ring structure for keys, where the
 				// arraylist is treated as a circle of participants)
 			}
-			try {
-				connection.sendKeysWithAck(clientKeys);
-			} catch (IOException e) {
-				e.printStackTrace();
-				System.exit(1);
+			connection.sendKeysWithAck(clientKeys);
+			serverState = STARTROUND;
+		} else if (serverState == STARTROUND) {
+			// Sending a starting round message to every single client
+			for (ClientSocketInfo c : clients) {
+				connection.send(new Message("STARTROUND"), c);
 			}
-			serverState = SENTKEYS;
-		} else if (serverState == SENTKEYS) {
-			
+			serverState = WAITFOROUTPUT;
+		} else if (serverState == WAITFOROUTPUT) {
+			// Waits for all of the clients to return outputs,
+			// then collates the inputs into a single result
+			// (using the combineMessages function currently in Message)
+			result = 'A'; // Just default for test
+			serverState = BROADCASTRESULT;
+		} else if (serverState == BROADCASTRESULT) {
+			connection.sendOutputWithAck(clients,
+					new Message(new Character(result).toString()));
+			serverState = STARTROUND;
+		} else {
+			// Unknown server state, so just ignore
 		}
 	}
 
