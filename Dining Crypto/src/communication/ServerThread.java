@@ -1,5 +1,6 @@
 package communication;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -16,8 +17,8 @@ public class ServerThread extends Thread {
 		Message stuff;
 		Message ack = new Message("OK");
 		System.err.println("In a server thread (right at the start)");
+		ClientSocketInfo clientConnection = clients.get(clientID);
 		try {
-			ClientSocketInfo clientConnection = clients.get(clientID);
 			// Acknowledge first connection, so that the client can keep sending
 			// more messages
 			stuff = clientConnection.receive();
@@ -45,7 +46,11 @@ public class ServerThread extends Thread {
 			System.out.println("Sent all shutdowns...exiting");
 			// Close socket connections for this client
 			clientConnection.close();
-			//System.exit(0);
+		} catch (EOFException e) {
+			// Server has lost the client connection due to the
+			// client disconnecting, so don't need to do anything
+			// else
+			System.exit(0);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);

@@ -1,5 +1,6 @@
 package communication;
 
+import java.io.EOFException;
 import java.io.IOException;
 
 public class Client3 {
@@ -15,15 +16,19 @@ public class Client3 {
 			connect.send(m);
 			System.out.println("post client message send");
 			Message reply;
-			while ((reply = connect.receive()) != null) {
+			while (true) {
+				reply = connect.receive();
 				if (reply.getMessage().equals("END")) {
 					connect.disconnect();
-					System.exit(0);
+					break;
 				}
 				System.out.println(reply.getMessage());
 				Message end = new Message("KILL");
 				connect.send(end);
 			}
+		} catch (EOFException e) {
+			connect.disconnect();
+			System.exit(0);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
