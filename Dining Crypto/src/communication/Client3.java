@@ -23,7 +23,8 @@ public class Client3 {
 					break;
 				}
 				System.out.println(reply.getMessage());
-				Message end = new Message("KILL");
+				/*Message end = new Message("KILL");*/
+				Message end = new Message("Roundtrip?");
 				connect.send(end);
 			}
 		} catch (EOFException e) {

@@ -23,6 +23,7 @@ public class Client2 {
 					break;
 				}
 				System.out.println(reply.getMessage());
+				connect.send(reply);
 			}
 		} catch (EOFException e) {
 			connect.disconnect();

@@ -8,6 +8,7 @@ public class Client {
 		System.out.println("Client has started up ok.");
 		
 		Message m = new Message("Hello");
+		Message reply;
 		ClientConnection connect = new ClientConnection("localhost", 9876);
 		System.out.println("pre client->server connect");
 		connect.connect();
@@ -15,7 +16,6 @@ public class Client {
 		try {
 			connect.send(m);
 			System.out.println("post client message send");
-			Message reply;
 			while (true) {
 				reply = connect.receive();
 				if (reply.getMessage().equals("END")) {
@@ -23,6 +23,7 @@ public class Client {
 					break;
 				}
 				System.out.println(reply.getMessage());
+				connect.send(reply);
 			}
 		} catch (EOFException e) {
 			// The input stream from the client connection has been closed
