@@ -2,11 +2,11 @@ package communication;
 
 import java.io.IOException;
 
-public class Client {
+public class Client3 {
 	public static void main(String[] args) {
-		System.out.println("Client has started up ok.");
+		System.out.println("Client2 has started up ok.");
 		
-		Message m = new Message("Hello");
+		Message m = new Message("Hello 333333");
 		ClientConnection connect = new ClientConnection("localhost", 9876);
 		System.out.println("pre client->server connect");
 		connect.connect();
@@ -21,6 +21,8 @@ public class Client {
 					System.exit(0);
 				}
 				System.out.println(reply.getMessage());
+				Message end = new Message("KILL");
+				connect.send(end);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
