@@ -41,7 +41,10 @@ public class ServerThread extends Thread {
 					// send the message around the chain
 					// to the client above your own number
 					// (so that the sockets don't duplicate the sending
-					System.out.println("received " + stuff.getMessage());
+					System.out.println("received " + stuff.getMessage() +
+							" " + stuff.getTrips());
+					if (stuff.getTrips() == (clients.size() - 1)) // WRONG. TODO: fix
+						continue; // Don't need to send this message any more
 					if ((clientID + 1) == clients.size()) {
 						// Need to send back to the first client (making array circular)
 						clients.get(0).send(stuff);

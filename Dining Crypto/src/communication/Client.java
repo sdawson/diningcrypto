@@ -23,6 +23,8 @@ public class Client {
 					break;
 				}
 				System.out.println(reply.getMessage());
+				reply.increment();
+				System.out.println("incrementing to " + reply.getTrips());
 				connect.send(reply);
 			}
 		} catch (EOFException e) {

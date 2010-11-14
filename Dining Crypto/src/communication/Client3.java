@@ -25,6 +25,8 @@ public class Client3 {
 				System.out.println(reply.getMessage());
 				/*Message end = new Message("KILL");*/
 				Message end = new Message("Roundtrip?");
+				reply.increment();
+				System.out.println("incrementing to " + reply.getTrips());
 				connect.send(end);
 			}
 		} catch (EOFException e) {
