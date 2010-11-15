@@ -1,0 +1,32 @@
+\section{The Dining Cryptographers Problem}
+
+The idea of anonymous message broadcasting is explained most easily using an
+example [a theoretical example??reword].  If three cryptographers employed by
+the NSA were to go out for dinner at a restaurant, then when it came time to
+pay for the meal they would face the decision of who was to pay.  The
+cryptographers decide amongst themselves that either the NSA or one of them
+will pay for the meal, but they only want to be able to tell whether one of the
+cryptographers or their employer paid, not which of the cryptographers paid (if
+any).  A simple protocol involving coin flipping can be used to solve this
+problem, and is the basis for more complicated message broadcast protocols,
+which will be described in a later section. \\
+
+The protocol to determine who paid the meal anonymously works by having each
+cryptographer secretly flip a coin with the cryptographer sitting to their right.  This
+results in each cryptographer being able to see two coins, which will show
+either the same side (e.g. heads and heads), or different sides (e.g. heads and
+tails).  Each cryptographer then decides if they want to pay for the meal or
+not.  If they aren't paying for the meal, they simply state whether the two
+coins they can see are the same or different.  If they decide to pay for the
+meal, then they say the opposite of what they actually see.  In the end, this
+means that if an odd number of 'different's are announced, one of the
+cryptographers paid, while if an even number of 'different's are mentioned, the
+NSA paid for the meal. \\
+
+\section{Expanding the Dining Cryptographers}
+
+The solution to the Dining Cryptographers problem is not only elegant, but it
+can be scaled to many more users, and converted into a more general form, where
+each participant in the system is represented as a node in a graph, and the
+shared coin flip becomes a key shared between two nodes in the graph i.e. an
+edge.

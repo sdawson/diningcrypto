@@ -1,0 +1,43 @@
+\documentclass[times,11pt,a4]{article}
+\usepackage{times}
+\usepackage{a4}
+\usepackage{url}
+
+% changes margins a bit (the default for Latex leaves a lot of white space)
+\topmargin -12mm
+\textwidth 155mm
+\textheight 235mm
+\oddsidemargin 0mm
+\evensidemargin=\oddsidemargin
+\parindent 0mm
+
+% Title (must be duplicated below in ESSAY_NAME page)
+\title{Anonymous Message Broadcasting}
+
+\author{Joshua Torrance and Sophie Dawson}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+%\input{abstract}
+stuff goes here
+\end{abstract}
+
+% using \include causes a page break
+% using \input does not cause a page break
+% Need to decide where to use each of these
+\input{introduction}
+\input{outline}
+
+%\nocite{0day}
+%\nocite{bs1}
+%
+%% using unsrt instead of plain keeps the references
+%% sorted according to how they are displayed in the text
+%\bibliographystyle{unsrt}
+%\bibliography{final}
+
+\end{document}
