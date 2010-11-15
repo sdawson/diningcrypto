@@ -29,4 +29,16 @@ The solution to the Dining Cryptographers problem is not only elegant, but it
 can be scaled to many more users, and converted into a more general form, where
 each participant in the system is represented as a node in a graph, and the
 shared coin flip becomes a key shared between two nodes in the graph i.e. an
-edge.
+edge.  To expand the idea further, it is generalized to form a system where a
+number of participants can share messages with each other without the messages
+creator being identifiable, resulting in a system for anonymous message
+broadcast. \\
+
+While the generalized system can allow edges between all participants, the
+basic ring structure of the Dining Cryptographers Problem was maintained.
+This was because the implementation of the anonymous message broadcast system
+used a client server architecture, where the server is responsible for handing
+keys out to all parties, then requesting and retrieving individual messages
+from the clients, and the extra overhead required to allow clients to shares
+keys with every single other client seemed more complex than necessary for an
+initial implementation of a broadcast system. \\
