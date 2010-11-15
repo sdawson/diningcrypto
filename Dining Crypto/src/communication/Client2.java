@@ -17,7 +17,7 @@ public class Client2 {
 			System.out.println("post client message send");
 			Message reply;
 			while (true) {
-				reply = connect.receive();
+				reply = connect.receiveMessage();
 				if (reply.getMessage().equals("END")) {
 					connect.disconnect();
 					break;

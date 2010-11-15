@@ -9,7 +9,7 @@ public class ClientSocketInfo {
 	private Socket clientSocket = null;
 	private ObjectInputStream in = null;
 	private ObjectOutputStream out = null;
-	
+
 	public ClientSocketInfo(Socket clientSocket) {
 		this.clientSocket = clientSocket;
 		try {
@@ -21,10 +21,10 @@ public class ClientSocketInfo {
 			System.exit(1);
 		}
 	}
-	
-	public Message receive() throws IOException {
+
+	public Message receiveMessage() throws IOException {
 		Message newMessage = null;
-		
+
 		try {
 			newMessage = (Message) in.readObject();
 		} catch (ClassNotFoundException e) {
@@ -32,19 +32,34 @@ public class ClientSocketInfo {
 		}
 		return newMessage;
 	}
-	
+
+	public KeySet receiveKeySet() throws IOException {
+		KeySet keyset = null;
+
+		try {
+			keyset = (KeySet) in.readObject();
+		} catch (ClassNotFoundException e) {
+			return null;
+		}
+		return keyset;
+	}
+
 	public void send(Message message) throws IOException {
 		out.writeObject(message);
 	}
-	
+
+	public void send(KeySet keys) throws IOException {
+		out.writeObject(keys);
+	}
+
 	public ObjectInputStream getInputStream() {
 		return this.in;
 	}
-	
+
 	public ObjectOutputStream getOutputStream() {
 		return this.out;
 	}
-	
+
 	public void close() throws IOException {
 		in.close();
 		out.close();

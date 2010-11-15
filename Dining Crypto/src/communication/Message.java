@@ -9,30 +9,29 @@ public class Message implements Serializable {
 	private String message;
 	// Individual message chars are just stored as offsets
 	private char indMessage;
-	private final ArrayList<Key> keys;
-	private static final int base = (int) '@'; // @ represents no msg
+	private static final int base = (int) '@'; // @ represents no message
 	private static final int alphaSize = 27;
-	
-	public Message(String message, ArrayList<Key> keys) {
+	private int noOfTrips;
+
+	public Message(String message) {
 		this.message = message;
-		this.keys = keys;
+		this.noOfTrips = 0;
 	}
-	
-	public Message(char indMessage, ArrayList<Key> keys) {
+
+	public Message(char indMessage) {
 		this.indMessage = (char) (indMessage - base);
-		this.keys = keys;
 	}
-	
+
 	public String getMessage() {
 		return this.message;
 	}
-	
+
 	public char getIndMessage() {
 		return (char) (this.indMessage + base);
 	}
-	
-	public void encode() {
-		for (Key k : keys) {
+
+	public void encode(KeySet keys) {
+		for (Key k : keys.getKeySet()) {
 			int keyOffset = k.getKey() - base;
 			if (k.getKeyop() == Keyop.ADD) {
 				System.out.println("key offset " + keyOffset);
@@ -50,7 +49,7 @@ public class Message implements Serializable {
 			}
 		}
 	}
-	
+
 	public char combineMessages(List<Character> messages) {
 		char temp = this.indMessage;
 		for (Character m : messages) {
@@ -58,5 +57,13 @@ public class Message implements Serializable {
 			temp = (char) (((temp + offset) + alphaSize) % alphaSize);
 		}
 		return (char) (temp + base);
+	}
+
+	public synchronized void increment() {
+		this.noOfTrips++;
+	}
+
+	public int getTrips() {
+		return this.noOfTrips;
 	}
 }

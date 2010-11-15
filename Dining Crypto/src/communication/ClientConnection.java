@@ -17,7 +17,7 @@ public class ClientConnection {
 		this.serverAddress = serverAddress;
 		this.serverPort = serverPort;
 	}
-	
+
 	public void connect() {
 		try {
 			socket = new Socket(serverAddress, serverPort);
@@ -34,12 +34,12 @@ public class ClientConnection {
 			System.exit(1);
 		}
 	}
-	
+
 	public void send(Message message) throws IOException {
 		out.writeObject(message);
 	}
 
-	public Message receive() throws IOException {
+	public Message receiveMessage() throws IOException {
 		Message newMessage = null;
 		try {
 			newMessage = (Message) in.readObject();
@@ -49,7 +49,18 @@ public class ClientConnection {
 		}
 		return newMessage;
 	}
-	
+
+	public KeySet receiveKeySet() throws IOException {
+		KeySet keyset = null;
+
+		try {
+			keyset = (KeySet) in.readObject();
+		} catch (ClassNotFoundException e) {
+			return null;
+		}
+		return keyset;
+	}
+
 	public void disconnect() {
 		try {
 			in.close();

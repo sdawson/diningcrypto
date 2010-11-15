@@ -3,22 +3,27 @@ package communication;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class ServerThread extends Thread {
 	private ArrayList<ClientSocketInfo> clients = null;
+	private HashMap<ClientSocketInfo, KeySet> keys = null;
 	private int clientID;
 	private int maxClients;
+	private int noOfReplies;
 	
 	public ServerThread(ArrayList<ClientSocketInfo> clients, int clientID,
-			int maxClients) {
+			int maxClients, HashMap<ClientSocketInfo, KeySet> keys,
+			int noOfReplies) {
 		this.clients = clients;
 		this.clientID = clientID;
 		this.maxClients = maxClients;
+		this.keys = keys;
+		this.noOfReplies = noOfReplies;
 	}
 	
 	public void run() {
 		Message stuff;
-		Message ack = new Message("OK");
 		System.err.println("In a server thread (right at the start)");
 		ClientSocketInfo clientConnection = clients.get(clientID);
 		System.out.println("perceived size of client socket array: " + clients.size());
@@ -28,50 +33,32 @@ public class ServerThread extends Thread {
 		 * key-pairs etc.
 		 */
 		try {
-			// Acknowledge first connection, so that the client can keep sending
-			// more messages
-			stuff = clientConnection.receive();
-			clientConnection.send(ack);
-			while (true) {
-				stuff = clientConnection.receive();
+			while (true) { // Assumes that all the clients have connected already
+				// Send keys to the client that is connected here
+				// only if the client hasn't already received a keyset
+				if (noOfReplies < maxClients) {
+					sendKeys(clientConnection);
+				} else {
+					resetReplies();
+				}
+				// Start the round at this point
+				sendStartRound(clientConnection);
+				// Wait for the client to send an output for the
+				// round back
+				stuff = clientConnection.receiveMessage();
+
 				if (stuff.getMessage().equals("KILL"))
 					break;
 
-				if (clients.size() == maxClients) {
-					// send the message around the chain
-					// to the client above your own number
-					// (so that the sockets don't duplicate the sending
-					System.out.println("received " + stuff.getMessage() +
-							" " + stuff.getTrips());
-					if (stuff.getTrips() == (clients.size() - 1)) // WRONG. TODO: fix
-						continue; // Don't need to send this message any more
-					if ((clientID + 1) == clients.size()) {
-						// Need to send back to the first client (making array circular)
-						clients.get(0).send(stuff);
-						System.out.println("Thread " + clientID + " sending to client 0");
-					} else {
-						clients.get(clientID+1).send(stuff);
-						System.out.println("Thread " + clientID + " sending to client " + clientID+1);
-					}
-				} else {
-					// Keep waiting until all the clients have connected
-					continue;
-				}
-				/*if (stuff.getMessage().equals("KILL"))
-					break;
-				System.out.println("received " + stuff.getMessage());
-				ArrayList<ClientSocketInfo> otherClients =
-					new ArrayList<ClientSocketInfo>(clients);
-				otherClients.remove(clientID);
-				// Send message to all other clients
-				for (ClientSocketInfo c : otherClients) {
-					// Broadcast the message just received
-					c.send(stuff);
-				}*/
+				incrementReplies();
+				while (noOfReplies < maxClients)
+					; // Wait until all clients have send a message back
+				// need to collate all the replies here
+				// if any of the messages are kill, then
+				// send a shutdown message back
+				// then broadcast
 			}
-			System.out.println("Outside while loop");
 			Message finalMessage = new Message("END");
-			System.out.println("perceived size of client socket array: " + clients.size());
 			for (ClientSocketInfo c : clients) {
 				System.err.println("sending a shutdown message");
 				c.send(finalMessage);
@@ -88,5 +75,34 @@ public class ServerThread extends Thread {
 			e.printStackTrace();
 			System.exit(1);
 		}
+	}
+
+	private void sendKeys(ClientSocketInfo client) throws IOException {
+		// Get corresponding keyset, then send it to the
+		// client
+		KeySet clientKeys = keys.get(client);
+		client.send(clientKeys);
+
+		Message reply = client.receiveMessage();
+		if (reply.getMessage().equals("OK")) {
+			// The keyset was received by the client correctly
+			incrementReplies();
+		} else {
+			// The keyset was not received correctly (needs to
+			// be resent TODO)
+			return;
+		}
+	}
+
+	private void sendStartRound(ClientSocketInfo client) throws IOException {
+		client.send(new Message("STARTROUND"));
+	}
+
+	private synchronized void incrementReplies() {
+		this.noOfReplies++;
+	}
+
+	private synchronized void resetReplies() {
+		this.noOfReplies = 0;
 	}
 }
