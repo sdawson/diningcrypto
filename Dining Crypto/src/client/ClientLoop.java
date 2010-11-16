@@ -69,6 +69,12 @@ public class ClientLoop implements Input {
 					 * send anything this round.
 					 */
 					if (input != null) {
+						/* TODO: THIS IS WHERE THE CLIENT SHOULD TAKE THE MESSAGE
+						 * SUBMITTED BY THE CLIENT (IF ANY), APPLY THE TRANSFORMS
+						 * IN KEYSET TO IT, THEN SUBMIT IT TO THE SERVER USING
+						 * THE FUNCTION CALL connection.send(new Message(resultOf
+						 * KeysetGoesHere).
+						 */
 						// TODO: actually create a term for the client to
 						// use that is translated into the protocol quit message
 						connection.send(new Message(input));

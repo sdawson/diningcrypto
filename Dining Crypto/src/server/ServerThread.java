@@ -40,10 +40,6 @@ public class ServerThread extends Thread {
 					sendKeys(clientConnection);
 				System.out.println("Sent keys to client " + clientID);
 				
-				/*while (sharedInfo.getReplies() < sharedInfo.getMaxClients())
-					ServerThread.sleep(1000);
-				*/
-				
 				/* All the threads have received their set of keys for the round,
 				 * so reset the reply count if it hasn't
 				 * already been done by another thread.
@@ -69,8 +65,11 @@ public class ServerThread extends Thread {
 					; // Wait until all clients have send a message back
 				// need to collate all the replies here
 				if (sharedInfo.getRoundResult() == null) {
-					// TODO: collation goes here
-					sharedInfo.setRoundResult(new Message("The result"));
+					/* TODO: THIS IS WHERE THE SERVER SHOULD TAKE ALL THE MESSAGES
+					 * RECEIVED THIS ROUND (THEY ARE IN THE ARRAYLIST RETURNED BY
+					 * sharedInfo.getCurrentRoundMessages() AND COMBINE THEM TO
+					 * FORM A FINAL VALUE FOR THE CURRENT ROUND.
+					 */
 				}
 				
 				// broadcasting the message back to the client
