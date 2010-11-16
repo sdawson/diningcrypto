@@ -104,7 +104,9 @@ public class ServerThread extends Thread {
 
 	private void sendKeys(ClientSocketInfo client) throws IOException {
 		// Get the keyset for this round
-		KeySet key = sharedInfo.getKeySet();
+		//KeySet key = sharedInfo.getKeySet();
+		// THIS IS JUST FOR TESTING
+		KeySet key = null;
 		
 		// Send the KeySet to the client
 		client.send(key);

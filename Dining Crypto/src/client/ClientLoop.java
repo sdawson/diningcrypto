@@ -78,6 +78,8 @@ public class ClientLoop implements Input {
 
 	@Override
 	public void inputString(String str) {
+		//TODO: Some sort of buffering so we don't need to worry about thread safety
 		this.input = str;
+		System.err.println("Message received!! " + str);
 	}
 }

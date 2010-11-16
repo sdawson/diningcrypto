@@ -7,6 +7,7 @@ import communication.CommunicationProtocol;
 import communication.KeySet;
 import communication.Message;
 
+import gui.GuiManager;
 import interfaces.Input;
 
 public class Client {
@@ -20,10 +21,17 @@ public class Client {
 			connection = new ClientConnection("localhost", 9876); 
 		}
 		
+		// Start the GUI
+		GuiManager guiManager = new GuiManager();
+		
+		
 		// Connect to the chosen server
 		connection.connect();
-		ClientLoop loop = new ClientLoop(connection, asldkf);
+		ClientLoop loop = new ClientLoop(connection, guiManager);
+		guiManager.setInput(loop);
 		loop.run();
 		connection.disconnect();
+		
+		
 	}
 }
