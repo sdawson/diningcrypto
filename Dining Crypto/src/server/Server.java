@@ -2,9 +2,7 @@ package server;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 
-import communication.KeySet;
 import communication.Message;
 
 public class Server {
@@ -14,8 +12,6 @@ public class Server {
 	public static void main(String[] args) throws IOException {
 		ServerConnection connection = new ServerConnection(PORT);
 		ArrayList<ClientSocketInfo> clients = new ArrayList<ClientSocketInfo>();
-		HashMap<ClientSocketInfo, KeySet> keysets =
-			new HashMap<ClientSocketInfo, KeySet>();
 		int noOfReplies = 0;
 		SharedServerInfo serverInfo = new SharedServerInfo(noOfReplies, 
 				MAXCLIENTS, new ArrayList<Message>());
