@@ -36,7 +36,7 @@ public class ServerThread extends Thread {
 				// only if the client hasn't already received a keyset
 
 				System.out.println("Sending keys to client " + clientID);
-				if (sharedInfo.getReplies() < sharedInfo.getMaxClients())
+				if (sharedInfo.getReplies() < sharedInfo.getNumberClients())
 					sendKeys(clientConnection);
 				System.out.println("Sent keys to client " + clientID);
 				
@@ -76,7 +76,7 @@ public class ServerThread extends Thread {
 				// broadcasting the message back to the client
 				// controlled by this thread.
 				sendResult(clientConnection);
-				while (sharedInfo.getReplies() < sharedInfo.getMaxClients())
+				while (sharedInfo.getReplies() < sharedInfo.getNumberClients())
 					;
 				
 				if (sharedInfo.getReplies() != 0)

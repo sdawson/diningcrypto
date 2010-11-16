@@ -26,8 +26,7 @@ public class Server {
 		}
 		
 		for (int i=0; i<MAXCLIENTS; i++) {
-			new ServerThread(clients, i, keysets,
-					serverInfo).start();
+			new ServerThread(clients, i, serverInfo).start();
 		}
 	}
 }
