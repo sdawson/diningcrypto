@@ -1,6 +1,11 @@
 package communication;
 
-
+/**
+ * Defines the set of messages that can be sent between the clients
+ * and the server.
+ * @author Sophie Dawson
+ *
+ */
 public class CommunicationProtocol {
 	/* A request from the client to the server asking for
 	 * a keyset for the round that is about to begin.

@@ -9,6 +9,16 @@ import java.net.UnknownHostException;
 import communication.KeySet;
 import communication.Message;
 
+/**
+ * An encapsulation of all client-side communication with
+ * the server.  Connecting to the server and sending/receiving
+ * messages and keysets are all handled by this class, in
+ * order to provide a simple interface to functions that
+ * interact with the network.
+ * 
+ * @author Sophie Dawson
+ *
+ */
 public class ClientConnection {
 	private String serverAddress;
 	private int serverPort;
@@ -21,6 +31,10 @@ public class ClientConnection {
 		this.serverPort = serverPort;
 	}
 
+	/**
+	 * Connects to the server specified during the creation
+	 * of the ClientConnection object.
+	 */
 	public void connect() {
 		try {
 			socket = new Socket(serverAddress, serverPort);
@@ -38,10 +52,21 @@ public class ClientConnection {
 		}
 	}
 
+	/**
+	 * Sends a single Message object to the server
+	 * 
+	 * @param message The Message to send
+	 * @throws IOException
+	 */
 	public void send(Message message) throws IOException {
 		out.writeObject(message);
 	}
 
+	/**
+	 * Receive a Message object from the server
+	 * @return The Message object sent by the server
+	 * @throws IOException
+	 */
 	public Message receiveMessage() throws IOException {
 		Message newMessage = null;
 		try {
@@ -53,6 +78,12 @@ public class ClientConnection {
 		return newMessage;
 	}
 
+	/**
+	 * Receives a single KeySet object from the server.
+	 * @return The KeySet object sent by the server
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
 	public KeySet receiveKeySet() throws IOException, ClassNotFoundException {
 		KeySet keyset = null;
 
@@ -60,6 +91,9 @@ public class ClientConnection {
 		return keyset;
 	}
 
+	/**
+	 * Disconnects the client from the server.
+	 */
 	public void disconnect() {
 		try {
 			in.close();

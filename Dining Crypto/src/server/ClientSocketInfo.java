@@ -8,6 +8,14 @@ import java.net.Socket;
 import communication.KeySet;
 import communication.Message;
 
+/**
+ * The ClientSocketInfo class contains all
+ * the socket and stream information relating
+ * to a single server-to-client connection.
+ * 
+ * @author Sophie Dawson
+ *
+ */
 public class ClientSocketInfo {
 	private Socket clientSocket = null;
 	private ObjectInputStream in = null;
@@ -25,6 +33,11 @@ public class ClientSocketInfo {
 		}
 	}
 
+	/**
+	 * Receive a message object from the client.
+	 * @return The message object send by the client.
+	 * @throws IOException
+	 */
 	public Message receiveMessage() throws IOException {
 		Message newMessage = null;
 
@@ -36,33 +49,29 @@ public class ClientSocketInfo {
 		return newMessage;
 	}
 
-	public KeySet receiveKeySet() throws IOException {
-		KeySet keyset = null;
-
-		try {
-			keyset = (KeySet) in.readObject();
-		} catch (ClassNotFoundException e) {
-			return null;
-		}
-		return keyset;
-	}
-
+	/**
+	 * Send a message to the connected client.
+	 * 
+	 * @param message The message object to send.
+	 * @throws IOException
+	 */
 	public void send(Message message) throws IOException {
 		out.writeObject(message);
 	}
 
+	/**
+	 * Send a keyset to the connected client.
+	 * @param keys The keyset object to send.
+	 * @throws IOException
+	 */
 	public void send(KeySet keys) throws IOException {
 		out.writeObject(keys);
 	}
 
-	public ObjectInputStream getInputStream() {
-		return this.in;
-	}
-
-	public ObjectOutputStream getOutputStream() {
-		return this.out;
-	}
-
+	/**
+	 * Close the connection to the client.
+	 * @throws IOException
+	 */
 	public void close() throws IOException {
 		in.close();
 		out.close();

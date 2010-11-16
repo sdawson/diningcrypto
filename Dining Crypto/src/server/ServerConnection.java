@@ -3,7 +3,14 @@ package server;
 import java.io.IOException;
 import java.net.ServerSocket;
 
-
+/**
+ * The ServerConnection class encapsulates the process
+ * of waiting for a client to connect, then passing
+ * this connection back to the calling class.
+ * 
+ * @author Sophie Dawson
+ *
+ */
 public class ServerConnection {
 	private ServerSocket serverSocket = null;
 	
@@ -16,6 +23,13 @@ public class ServerConnection {
 		}
 	}
 	
+	/**
+	 * Accept a connection from a client attempting
+	 * to connect to the server, then create a new
+	 * ClientSocketInfo object and return this.
+	 * @return The ClientSocketInfo object containing
+	 * all connection information.
+	 */
 	public ClientSocketInfo acceptConnection() {
 		try {
 			ClientSocketInfo csi = new ClientSocketInfo(serverSocket.accept());
@@ -28,6 +42,10 @@ public class ServerConnection {
 		return null;
 	}
 	
+	/**
+	 * Disconnect the server-side socket.
+	 * @throws IOException
+	 */
 	public void disconnect() throws IOException {
 		serverSocket.close();
 	}

@@ -1,15 +1,15 @@
 package client;
 
-import java.io.EOFException;
-import java.io.IOException;
-
-import communication.CommunicationProtocol;
-import communication.KeySet;
-import communication.Message;
-
 import gui.GuiManager;
-import interfaces.Input;
 
+/**
+ * The main function that runs the GUI-based client,
+ * and initializes theh connection between the client
+ * and server.
+ * 
+ * @author Sophie Dawson
+ *
+ */
 public class Client {
 	private static ClientConnection connection = null;
 

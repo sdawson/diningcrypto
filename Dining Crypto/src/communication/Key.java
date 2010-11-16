@@ -2,6 +2,14 @@ package communication;
 
 import java.security.SecureRandom;
 
+/**
+ * Represents a single key that is shared between two clients.
+ * The details of the client pair the key refers to are not
+ * stored within the Key object, since it is used by the client,
+ * and the client should not know this information.
+ * @author Joshua Torrance
+ *
+ */
 public class Key {
 	private final int key;
 	private final Keyop op;

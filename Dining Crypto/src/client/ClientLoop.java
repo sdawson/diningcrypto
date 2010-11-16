@@ -10,6 +10,13 @@ import communication.CommunicationProtocol;
 import communication.KeySet;
 import communication.Message;
 
+/**
+ * Defines the main loop the client cycles through
+ * as it communicates with the server.
+ * 
+ * @author Sophie Dawson
+ *
+ */
 public class ClientLoop implements Input {
 	private final ClientConnection connection;
 	private String input = null;
@@ -20,6 +27,24 @@ public class ClientLoop implements Input {
 		this.guiRef = output;
 	}
 	
+	/**
+	 * Starts running the client operation loop.
+	 * This consists of the following repeated steps:
+	 *  - Get a keyset for the round from the server
+	 *  - Acknowledge the receipt of the keyset
+	 *  - Wait for the server to indicate the current round
+	 *    has started
+	 *  - Send any client-submitted input to the server
+	 *    (this will also be enciphered using the keyset
+	 *    previously obtained)
+	 *  - Receive the result of the round from the server
+	 *    and display it
+	 *  Note: As the loop is running the client also checks
+	 *  to see if the server has send out a shutdown message,
+	 *  and if so the client breaks out of the operation loop
+	 *  and lets the calling class close the client-server
+	 *  connection. 
+	 */
 	public void run() {
 		Message received;
 		while (true) {
