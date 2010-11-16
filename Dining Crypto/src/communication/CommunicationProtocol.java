@@ -2,6 +2,10 @@ package communication;
 
 
 public class CommunicationProtocol {
+	/* A request from the client to the server asking for
+	 * a keyset for the round that is about to begin.
+	 */
+	public static final String KEYREQUEST = "KEY";
 	/* An acknowledgment message, usually from the client
 	 * to the server.
 	 */

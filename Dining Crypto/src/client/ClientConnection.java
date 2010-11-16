@@ -53,14 +53,10 @@ public class ClientConnection {
 		return newMessage;
 	}
 
-	public KeySet receiveKeySet() throws IOException {
+	public KeySet receiveKeySet() throws IOException, ClassNotFoundException {
 		KeySet keyset = null;
 
-		try {
-			keyset = (KeySet) in.readObject();
-		} catch (ClassNotFoundException e) {
-			return null;
-		}
+		keyset = (KeySet) in.readObject();
 		return keyset;
 	}
 
