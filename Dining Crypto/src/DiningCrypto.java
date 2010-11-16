@@ -1,4 +1,4 @@
-import Crypto.Simple;
+import crypto.Simple;
 import gui.GuiManager;
 
 

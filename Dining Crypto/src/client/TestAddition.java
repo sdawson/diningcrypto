@@ -11,7 +11,7 @@ public class TestAddition {
 	private static final int base = (int) 'A';
 
 	public static void main(String[] args) {
-		char tryChar = (char) 'B' - base;
+/*		char tryChar = (char) 'B' - base;
 		char test = (char) ('A' - tryChar);
 		char another = (char) ('A' + 1);
 		char a2 = (char) ('A' + ((int) 'B'));
@@ -48,7 +48,7 @@ public class TestAddition {
 //		finalarray.add(new Character('A'));
 //		Message jjj = new Message('A', null);
 //		System.out.println("orig " + jjj.getIndMessage());
-//		System.out.println("final " + jjj.combineMessages(finalarray));
+//		System.out.println("final " + jjj.combineMessages(finalarray));*/
 	}
 
 }

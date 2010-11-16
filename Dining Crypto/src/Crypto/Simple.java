@@ -1,4 +1,4 @@
-package Crypto;
+package crypto;
 
 import communication.Message;
 
