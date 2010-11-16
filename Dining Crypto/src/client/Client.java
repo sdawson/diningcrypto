@@ -3,44 +3,27 @@ package client;
 import java.io.EOFException;
 import java.io.IOException;
 
+import communication.CommunicationProtocol;
+import communication.KeySet;
 import communication.Message;
 
+import interfaces.Input;
+
 public class Client {
-	public static void main(String[] args) {
-		System.out.println("Client has started up ok.");
-		
-		Message m = new Message("GET KEYS");
-		Message reply;
-		ClientConnection connect = new ClientConnection("localhost", 9876);
-		System.out.println("pre client->server connect");
-		connect.connect();
-		System.out.println("post client->server connect");
-		try {
-			connect.send(m);
-			System.out.println("post client message send");
-			while (true) {
-				reply = connect.receiveMessage();
-				if (reply.getMessage().equals("END")) {
-					connect.disconnect();
-					break;
-				}
-				System.out.println(reply.getMessage());
-				reply.increment();
-				System.out.println("incrementing to " + reply.getTrips());
-				connect.send(reply);
-			}
-		} catch (EOFException e) {
-			// The input stream from the client connection has been closed
-			connect.disconnect();
-			System.exit(0);
-		} catch (IOException e) {
-			e.printStackTrace();
+	private static ClientConnection connection = null;
+
+	public static void main(String[] args) {		
+		if (args.length == 2) {
+			connection = new ClientConnection(args[0], 
+					new Integer(args[1]).intValue());
+		} else {
+			connection = new ClientConnection("localhost", 9876); 
 		}
-		connect.disconnect();
-	}
-	
-	private void sendOk(ClientConnection connection) throws IOException {
-		Message ok = new Message("OK");
-		connection.send(ok);
+		
+		// Connect to the chosen server
+		connection.connect();
+		ClientLoop loop = new ClientLoop(connection, asldkf);
+		loop.run();
+		connection.disconnect();
 	}
 }

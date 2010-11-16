@@ -1,9 +1,9 @@
 package crypto;
 
-import communication.Message;
-
 import interfaces.Input;
 import interfaces.Output;
+
+import communication.Message;
 
 public class Simple implements Input, Output {
 	private Output output;
