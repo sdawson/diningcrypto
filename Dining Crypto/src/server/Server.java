@@ -1,8 +1,11 @@
-package communication;
+package server;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import communication.KeySet;
+import communication.Message;
 
 public class Server {
 	private static final int PORT = 9876;

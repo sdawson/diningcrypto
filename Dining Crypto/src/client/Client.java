@@ -1,13 +1,16 @@
-package communication;
+package client;
 
 import java.io.EOFException;
 import java.io.IOException;
 
-public class Client2 {
+import communication.Message;
+
+public class Client {
 	public static void main(String[] args) {
-		System.out.println("Client2 has started up ok.");
+		System.out.println("Client has started up ok.");
 		
-		Message m = new Message("Hello 22222222");
+		Message m = new Message("GET KEYS");
+		Message reply;
 		ClientConnection connect = new ClientConnection("localhost", 9876);
 		System.out.println("pre client->server connect");
 		connect.connect();
@@ -15,7 +18,6 @@ public class Client2 {
 		try {
 			connect.send(m);
 			System.out.println("post client message send");
-			Message reply;
 			while (true) {
 				reply = connect.receiveMessage();
 				if (reply.getMessage().equals("END")) {
@@ -28,11 +30,17 @@ public class Client2 {
 				connect.send(reply);
 			}
 		} catch (EOFException e) {
+			// The input stream from the client connection has been closed
 			connect.disconnect();
 			System.exit(0);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		connect.disconnect();
+	}
+	
+	private void sendOk(ClientConnection connection) throws IOException {
+		Message ok = new Message("OK");
+		connection.send(ok);
 	}
 }

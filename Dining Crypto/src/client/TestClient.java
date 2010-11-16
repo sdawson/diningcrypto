@@ -1,7 +1,11 @@
-package communication;
+package client;
 
 import java.io.EOFException;
 import java.io.IOException;
+
+import communication.KeySet;
+import communication.Message;
+
 
 public class TestClient {
 	public static void main(String[] args) {

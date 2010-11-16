@@ -1,6 +1,8 @@
-package communication;
+package server;
 
 import java.util.ArrayList;
+
+import communication.Message;
 
 /** The set of information that needs to be shared
  * by all the threads running on the server.  All

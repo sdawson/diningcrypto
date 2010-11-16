@@ -1,9 +1,12 @@
-package communication;
+package server;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+
+import communication.KeySet;
+import communication.Message;
 
 public class ClientSocketInfo {
 	private Socket clientSocket = null;

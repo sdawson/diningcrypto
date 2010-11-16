@@ -1,6 +1,10 @@
-package communication;
+package client;
 
 import java.util.ArrayList;
+
+import communication.Key;
+import communication.Keyop;
+import communication.Message;
 
 public class TestAddition {
 	/* Assumes only capital A - Z are used in messages. */

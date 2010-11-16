@@ -1,9 +1,13 @@
-package communication;
+package server;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import communication.CommunicationProtocol;
+import communication.KeySet;
+import communication.Message;
 
 public class ServerThread extends Thread {
 	private ArrayList<ClientSocketInfo> clients = null;
