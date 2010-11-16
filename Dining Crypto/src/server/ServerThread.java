@@ -38,9 +38,16 @@ public class ServerThread extends Thread {
 			while (true) { // Assumes that all the clients have connected already
 				// Send keys to the client that is connected here
 				// only if the client hasn't already received a keyset
-				sendKeys(clientConnection);
-				while (sharedInfo.getReplies() < sharedInfo.getMaxClients())
-					;
+
+				System.out.println("Sending keys to client " + clientID);
+				if (sharedInfo.getReplies() < sharedInfo.getMaxClients())
+					sendKeys(clientConnection);
+				System.out.println("Sent keys to client " + clientID);
+				
+				/*while (sharedInfo.getReplies() < sharedInfo.getMaxClients())
+					ServerThread.sleep(1000);
+				*/
+				
 				/* All the threads have received their set of keys for the round,
 				 * so reset the reply count if it hasn't already been done by another
 				 * thread.
@@ -69,13 +76,15 @@ public class ServerThread extends Thread {
 					// TODO: collation goes here
 					sharedInfo.setRoundResult(new Message("The result"));
 				}
+				
 				// broadcasting the message back to the client
 				// controlled by this thread.
-				if (sharedInfo.getReplies() < sharedInfo.getMaxClients()) {
-					sendResult(clientConnection);
-				} else {
+				sendResult(clientConnection);
+				while (sharedInfo.getReplies() < sharedInfo.getMaxClients())
+					;
+				
+				if (sharedInfo.getReplies() != 0)
 					sharedInfo.resetReplies();
-				}
 			}
 			Message finalMessage = new Message(CommunicationProtocol.SHUTDOWN);
 			for (ClientSocketInfo c : clients) {
@@ -85,6 +94,7 @@ public class ServerThread extends Thread {
 			System.out.println("Sent all shutdowns...exiting");
 			// Close socket connections for this client
 			clientConnection.close();
+			System.exit(0);
 		} catch (EOFException e) {
 			// Server has lost the client connection due to the
 			// client disconnecting, so don't need to do anything
@@ -118,6 +128,7 @@ public class ServerThread extends Thread {
 		
 		Message reply = client.receiveMessage();
 		if (reply.getMessage().equals(CommunicationProtocol.ACK)) {
+			System.out.println("Incrementing no of replies");
 			sharedInfo.incrementReplies();
 		} else {
 			return;  // probably want to reset here instead
