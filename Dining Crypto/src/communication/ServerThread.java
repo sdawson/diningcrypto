@@ -47,7 +47,7 @@ public class ServerThread extends Thread {
 				// round back
 				stuff = clientConnection.receiveMessage();
 
-				if (stuff.getMessage().equals("KILL"))
+				if (stuff.getMessage().equals(CommunicationProtocol.CLIENTEXIT))
 					break;
 
 				incrementReplies();
@@ -58,7 +58,7 @@ public class ServerThread extends Thread {
 				// send a shutdown message back
 				// then broadcast
 			}
-			Message finalMessage = new Message("END");
+			Message finalMessage = new Message(CommunicationProtocol.SHUTDOWN);
 			for (ClientSocketInfo c : clients) {
 				System.err.println("sending a shutdown message");
 				c.send(finalMessage);
@@ -84,7 +84,7 @@ public class ServerThread extends Thread {
 		client.send(clientKeys);
 
 		Message reply = client.receiveMessage();
-		if (reply.getMessage().equals("OK")) {
+		if (reply.getMessage().equals(CommunicationProtocol.ACK)) {
 			// The keyset was received by the client correctly
 			incrementReplies();
 		} else {
@@ -95,7 +95,7 @@ public class ServerThread extends Thread {
 	}
 
 	private void sendStartRound(ClientSocketInfo client) throws IOException {
-		client.send(new Message("STARTROUND"));
+		client.send(new Message(CommunicationProtocol.STARTROUND));
 	}
 
 	private synchronized void incrementReplies() {
