@@ -14,6 +14,8 @@ public class Server {
 		HashMap<ClientSocketInfo, KeySet> keysets =
 			new HashMap<ClientSocketInfo, KeySet>();
 		int noOfReplies = 0;
+		SharedServerInfo serverInfo = new SharedServerInfo(noOfReplies, 
+				MAXCLIENTS, new ArrayList<Message>());
 		
 		/* Only accept three clients */
 		for (int i=0; i<MAXCLIENTS; i++) {
@@ -23,8 +25,8 @@ public class Server {
 		// TODO: Generate a set of keys for each client.
 		
 		for (int i=0; i<MAXCLIENTS; i++) {
-			new ServerThread(clients, i, MAXCLIENTS, keysets,
-					noOfReplies).start();
+			new ServerThread(clients, i, keysets,
+					serverInfo).start();
 		}
 	}
 }

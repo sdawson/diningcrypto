@@ -9,21 +9,19 @@ public class ServerThread extends Thread {
 	private ArrayList<ClientSocketInfo> clients = null;
 	private HashMap<ClientSocketInfo, KeySet> keys = null;
 	private int clientID;
-	private int maxClients;
-	private int noOfReplies;
+	private SharedServerInfo sharedInfo;
 	
 	public ServerThread(ArrayList<ClientSocketInfo> clients, int clientID,
-			int maxClients, HashMap<ClientSocketInfo, KeySet> keys,
-			int noOfReplies) {
+			HashMap<ClientSocketInfo, KeySet> keys,
+			SharedServerInfo sharedInfo) {
 		this.clients = clients;
 		this.clientID = clientID;
-		this.maxClients = maxClients;
+		this.sharedInfo = sharedInfo;
 		this.keys = keys;
-		this.noOfReplies = noOfReplies;
 	}
 	
 	public void run() {
-		Message stuff;
+		Message output;
 		System.err.println("In a server thread (right at the start)");
 		ClientSocketInfo clientConnection = clients.get(clientID);
 		System.out.println("perceived size of client socket array: " + clients.size());
@@ -36,27 +34,44 @@ public class ServerThread extends Thread {
 			while (true) { // Assumes that all the clients have connected already
 				// Send keys to the client that is connected here
 				// only if the client hasn't already received a keyset
-				if (noOfReplies < maxClients) {
-					sendKeys(clientConnection);
-				} else {
-					resetReplies();
+				sendKeys(clientConnection);
+				while (sharedInfo.getReplies() < sharedInfo.getMaxClients())
+					;
+				/* All the threads have received their set of keys for the round,
+				 * so reset the reply count if it hasn't already been done by another
+				 * thread.
+				 */
+				if (sharedInfo.getReplies() != 0) {
+					sharedInfo.resetReplies();
 				}
+
 				// Start the round at this point
 				sendStartRound(clientConnection);
 				// Wait for the client to send an output for the
 				// round back
-				stuff = clientConnection.receiveMessage();
+				output = clientConnection.receiveMessage();
 
-				if (stuff.getMessage().equals(CommunicationProtocol.CLIENTEXIT))
+				if (output.getMessage().equals(CommunicationProtocol.CLIENTEXIT))
 					break;
 
-				incrementReplies();
-				while (noOfReplies < maxClients)
+				sharedInfo.add(output);
+				// incrementing is auto taken care of
+				// by keeping track of the size of the message array for
+				// the current round
+				while (sharedInfo.getNoOfMessages() < sharedInfo.getMaxClients())
 					; // Wait until all clients have send a message back
 				// need to collate all the replies here
-				// if any of the messages are kill, then
-				// send a shutdown message back
-				// then broadcast
+				if (sharedInfo.getRoundResult() == null) {
+					// TODO: collation goes here
+					sharedInfo.setRoundResult(new Message("The result"));
+				}
+				// broadcasting the message back to the client
+				// controlled by this thread.
+				if (sharedInfo.getReplies() < sharedInfo.getMaxClients()) {
+					sendResult(clientConnection);
+				} else {
+					sharedInfo.resetReplies();
+				}
 			}
 			Message finalMessage = new Message(CommunicationProtocol.SHUTDOWN);
 			for (ClientSocketInfo c : clients) {
@@ -86,23 +101,27 @@ public class ServerThread extends Thread {
 		Message reply = client.receiveMessage();
 		if (reply.getMessage().equals(CommunicationProtocol.ACK)) {
 			// The keyset was received by the client correctly
-			incrementReplies();
+			sharedInfo.incrementReplies();
 		} else {
 			// The keyset was not received correctly (needs to
 			// be resent TODO)
 			return;
 		}
 	}
+	
+	private void sendResult(ClientSocketInfo client) throws IOException {
+		client.send(sharedInfo.getRoundResult());
+		
+		Message reply = client.receiveMessage();
+		if (reply.getMessage().equals(CommunicationProtocol.ACK)) {
+			sharedInfo.incrementReplies();
+		} else {
+			return;  // probably want to reset here instead
+		}
+	}
 
+	/* TODO: Change hardcoded strings */
 	private void sendStartRound(ClientSocketInfo client) throws IOException {
 		client.send(new Message(CommunicationProtocol.STARTROUND));
-	}
-
-	private synchronized void incrementReplies() {
-		this.noOfReplies++;
-	}
-
-	private synchronized void resetReplies() {
-		this.noOfReplies = 0;
 	}
 }
