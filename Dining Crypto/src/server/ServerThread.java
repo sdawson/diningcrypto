@@ -3,7 +3,6 @@ package server;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import communication.CommunicationProtocol;
 import communication.KeySet;
@@ -11,17 +10,14 @@ import communication.Message;
 
 public class ServerThread extends Thread {
 	private ArrayList<ClientSocketInfo> clients = null;
-	private HashMap<ClientSocketInfo, KeySet> keys = null;
 	private int clientID;
 	private SharedServerInfo sharedInfo;
 	
 	public ServerThread(ArrayList<ClientSocketInfo> clients, int clientID,
-			HashMap<ClientSocketInfo, KeySet> keys,
 			SharedServerInfo sharedInfo) {
 		this.clients = clients;
 		this.clientID = clientID;
 		this.sharedInfo = sharedInfo;
-		this.keys = keys;
 	}
 	
 	public void run() {
@@ -39,11 +35,13 @@ public class ServerThread extends Thread {
 				// Send keys to the client that is connected here
 				// only if the client hasn't already received a keyset
 				sendKeys(clientConnection);
-				while (sharedInfo.getReplies() < sharedInfo.getMaxClients())
+				
+				while (sharedInfo.getReplies() < sharedInfo.getNumberClients())
 					;
+				
 				/* All the threads have received their set of keys for the round,
-				 * so reset the reply count if it hasn't already been done by another
-				 * thread.
+				 * so reset the reply count if it hasn't
+				 * already been done by another thread.
 				 */
 				if (sharedInfo.getReplies() != 0) {
 					sharedInfo.resetReplies();
@@ -62,7 +60,7 @@ public class ServerThread extends Thread {
 				// incrementing is auto taken care of
 				// by keeping track of the size of the message array for
 				// the current round
-				while (sharedInfo.getNoOfMessages() < sharedInfo.getMaxClients())
+				while (sharedInfo.getNoOfMessages() < sharedInfo.getNumberClients())
 					; // Wait until all clients have send a message back
 				// need to collate all the replies here
 				if (sharedInfo.getRoundResult() == null) {
@@ -71,7 +69,7 @@ public class ServerThread extends Thread {
 				}
 				// broadcasting the message back to the client
 				// controlled by this thread.
-				if (sharedInfo.getReplies() < sharedInfo.getMaxClients()) {
+				if (sharedInfo.getReplies() < sharedInfo.getNumberClients()) {
 					sendResult(clientConnection);
 				} else {
 					sharedInfo.resetReplies();
@@ -97,10 +95,11 @@ public class ServerThread extends Thread {
 	}
 
 	private void sendKeys(ClientSocketInfo client) throws IOException {
-		// Get corresponding keyset, then send it to the
-		// client
-		KeySet clientKeys = keys.get(client);
-		client.send(clientKeys);
+		// Get the keyset for this round
+		KeySet key = sharedInfo.getKeySet();
+		
+		// Send the KeySet to the client
+		client.send(key);
 
 		Message reply = client.receiveMessage();
 		if (reply.getMessage().equals(CommunicationProtocol.ACK)) {
@@ -108,8 +107,9 @@ public class ServerThread extends Thread {
 			sharedInfo.incrementReplies();
 		} else {
 			// The keyset was not received correctly (needs to
-			// be resent TODO)
-			return;
+			// be resent)
+			
+			sendKeys(client);
 		}
 	}
 	

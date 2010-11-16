@@ -25,8 +25,6 @@ public class Server {
 			clients.add(connection.acceptConnection());
 		}
 		
-		// TODO: Generate a set of keys for each client.
-		
 		for (int i=0; i<MAXCLIENTS; i++) {
 			new ServerThread(clients, i, keysets,
 					serverInfo).start();
