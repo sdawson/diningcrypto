@@ -41,6 +41,7 @@ public class Gui extends JFrame implements Output, WindowListener {
 	private void createTextDisplayBox() {
 		 textDisplay = new JTextArea(20, 50);
 		 textDisplay.setEditable(false);
+		 textDisplay.setLineWrap(true);
 		 textDisplay.setVisible(true);
 		 getContentPane().add(textDisplay, BorderLayout.CENTER);
 	}
