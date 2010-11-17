@@ -9,8 +9,10 @@ import java.awt.event.WindowListener;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ScrollPaneConstants;
 
 public class Gui extends JFrame implements Output, WindowListener {
 	private static final long serialVersionUID = -7886147914342084854L;
@@ -39,11 +41,13 @@ public class Gui extends JFrame implements Output, WindowListener {
 	}
 
 	private void createTextDisplayBox() {
-		 textDisplay = new JTextArea(20, 50);
-		 textDisplay.setEditable(false);
-		 textDisplay.setLineWrap(true);
-		 textDisplay.setVisible(true);
-		 getContentPane().add(textDisplay, BorderLayout.CENTER);
+		textDisplay = new JTextArea(20, 50);
+		textDisplay.setEditable(false);
+		textDisplay.setLineWrap(true);
+		textDisplay.setVisible(true);
+		JScrollPane boxFrame = new JScrollPane(textDisplay,
+				ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		getContentPane().add(boxFrame, BorderLayout.CENTER);
 	}
 	
 	private void createTextEntryBox() {
