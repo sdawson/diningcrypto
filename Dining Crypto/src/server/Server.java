@@ -33,8 +33,8 @@ public class Server {
 		
 		/* Only accept MAXCLIENTS clients */
 		for (int i=0; i<MAXCLIENTS; i++) {
-			System.out.println((i+1) + " client connected.");
 			clients.add(connection.acceptConnection());
+			System.out.println((i+1) + " client connected.");
 		}
 		
 		for (int i=0; i<MAXCLIENTS; i++) {

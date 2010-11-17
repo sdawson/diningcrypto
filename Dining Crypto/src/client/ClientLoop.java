@@ -5,6 +5,7 @@ import interfaces.Output;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import communication.CommunicationProtocol;
 import communication.KeySet;
@@ -47,6 +48,7 @@ public class ClientLoop implements Input {
 	 */
 	public void run() {
 		Message received;
+		ArrayList<Message> roundResults;
 		while (true) {
 			try {
 				// Get keyset for the round
@@ -79,18 +81,23 @@ public class ClientLoop implements Input {
 						// use that is translated into the protocol quit message
 						connection.send(new Message(input));
 					} else {
-						connection.send(new Message("TC1Send"));
+						connection.send(new Message(""));
 					}
 					// Waiting for the result of the round
-					received = connection.receiveMessage();
-					if (received.getMessage().equals(CommunicationProtocol.SHUTDOWN)) {
-						break;
+					roundResults = connection.receiveRoundResults();
+					// If any of the message returned are shutdown messages from
+					// the server, start the client shutdown process.
+					for (Message m : roundResults) {
+						if (m.getMessage().equals(CommunicationProtocol.SHUTDOWN))
+							break;
 					}
 					// Otherwise acknowledge that the result has been
 					// received and display it
 					connection.send(new Message(CommunicationProtocol.ACK));
-					System.out.println("Round result: " + received.getMessage());
-					guiRef.outputString(received.getMessage());
+					// Collate the results for the round and display them TODO: alter line below
+					String r = collate(roundResults);
+					System.out.println("Round result: " + r);
+					guiRef.outputString(r);
 				} else if (received.getMessage().equals(CommunicationProtocol.SHUTDOWN)) {
 					break;
 				} else {
@@ -98,7 +105,7 @@ public class ClientLoop implements Input {
 					break;
 				}
 			} catch (EOFException e) {
-				/* This is expected behaviour, since it indicates
+				/* This is expected behavior, since it indicates
 				 * one of the other clients/the server has disconnected. 
 				 */
 			} catch (IOException e) {
@@ -107,6 +114,15 @@ public class ClientLoop implements Input {
 		}
 	}
 
+	private String collate(ArrayList<Message> messages) {
+		String s = new String();
+		
+		for (Message m : messages) {
+			s.concat(m.getMessage());
+		}
+		return s;
+	}
+	
 	@Override
 	public void inputString(String str) {
 		//TODO: Some sort of buffering so we don't need to worry about thread safety

@@ -19,7 +19,6 @@ import communication.Message;
 public class SharedServerInfo {
 	private int noOfReplies, numberClients, keysDistributed = 0;
 	private ArrayList<Message> currentRoundMessages;
-	private Message currentRoundResult;
 	private KeySet[] keysets = null;
 	
 	public SharedServerInfo(int noOfReplies, int numberClients,
@@ -27,7 +26,6 @@ public class SharedServerInfo {
 		this.noOfReplies = noOfReplies;
 		this.numberClients = numberClients;
 		this.currentRoundMessages = currentRoundMessages;
-		this.currentRoundResult = null;
 	}
 	
 	public synchronized void incrementReplies() {
@@ -60,14 +58,6 @@ public class SharedServerInfo {
 	
 	public synchronized void resetRoundMessages() {
 		this.currentRoundMessages.clear();
-	}
-	
-	public synchronized void setRoundResult(Message message) {
-		this.currentRoundResult = message; //?
-	}
-	
-	public synchronized Message getRoundResult() {
-		return this.currentRoundResult;
 	}
 	
 	public synchronized KeySet getKeySet() {
