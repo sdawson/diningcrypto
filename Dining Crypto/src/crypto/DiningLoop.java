@@ -58,6 +58,7 @@ public class DiningLoop implements Input {
 	public void run() {
 		Message received;
 		ArrayList<Message> roundResults;
+		boolean inMessageFlag = false;
 		
 		while (true) {
 			try {
@@ -68,7 +69,6 @@ public class DiningLoop implements Input {
 					// received a shutdown command.
 					break;
 				}
-				
 				
 				received = connection.receiveMessage();
 				if (received.getMessage().equals(CommunicationProtocol.START_ROUND)) {
@@ -95,6 +95,10 @@ public class DiningLoop implements Input {
 					if (r!=0) {
 						// Display the result
 						guiRef.outputString("" + r);
+						inMessageFlag = true;
+					} else if ( inMessageFlag ) {
+						guiRef.outputString("\n");
+						inMessageFlag = false;
 					}
 					
 				} else if (received.getMessage().equals(CommunicationProtocol.SHUTDOWN)) {
