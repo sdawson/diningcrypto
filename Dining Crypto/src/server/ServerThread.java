@@ -26,7 +26,7 @@ public class ServerThread extends Thread {
 	}
 	
 	public void run() {
-		Message output;
+		Message output = null;
 		int count = 0;
 		ClientSocketInfo clientConnection = clients.get(clientID);
 		
@@ -59,26 +59,26 @@ public class ServerThread extends Thread {
 
 				// Start the round at this point
 				sendStartRound(clientConnection);
-				// Wait for the client to send an output for the
-				// round back
-				output = clientConnection.receiveMessage();
-
-				if (output.getMessage().equals(CommunicationProtocol.CLIENT_EXIT))
-					break;
-
-				// Add the output to the shared output ArrayList
-				sharedInfo.add(output);
 				
 				// Wait until all clients have send a message back
-				while (sharedInfo.getNoOfMessages() < sharedInfo.getNumberClients())
-					;
+				if (sharedInfo.getNoOfMessages() < sharedInfo.getNumberClients())
+					// Wait for the client to send an output for
+					// the round back
+					output = clientConnection.receiveMessage();
+				
+				if (output != null) {
+					// If an output was received by the connected client
+					// add it to the shared output ArrayList, as long
+					// as it wasn't an exit command.
+					if (output.getMessage().equals(CommunicationProtocol.CLIENT_EXIT))
+						break;
+					sharedInfo.add(output);
+				}
 				
 				// Then send all the resulting messages for the round back to the client				
-				// controlled by this thread.
-				sendResults(clientConnection);
-				
-				while (sharedInfo.getReplies() < sharedInfo.getNumberClients())
-					;
+				// controlled by this thread.				
+				if (sharedInfo.getReplies() < sharedInfo.getNumberClients())
+					sendResults(clientConnection);
 				
 				if (sharedInfo.getReplies() != 0)
 					sharedInfo.resetReplies();
