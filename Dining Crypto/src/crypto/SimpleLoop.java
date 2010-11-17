@@ -67,7 +67,7 @@ public class SimpleLoop implements Input {
 				
 				
 				received = connection.receiveMessage();
-				if (received.getMessage().equals(CommunicationProtocol.STARTROUND)) {
+				if (received.getMessage().equals(CommunicationProtocol.START_ROUND)) {
 					System.out.println("Server has requested the start of a round");
 					
 					transmit(inputBuf.next());

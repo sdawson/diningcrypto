@@ -30,6 +30,7 @@ public class Client {
 		
 		
 		// Connect to the chosen server
+		System.out.println("Connecting to server: " + connection.toString());
 		String error = connection.connect();
 		if (error.length() != 0) {
 			guiManager.outputString(error);
