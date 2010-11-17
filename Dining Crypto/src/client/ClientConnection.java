@@ -3,6 +3,7 @@ package client;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -46,6 +47,9 @@ public class ClientConnection {
 			System.out.println("post client stream collection");
 		} catch (UnknownHostException e) {
 			System.err.println("Error: Unknown host");
+			System.exit(1);
+		} catch (ConnectException e) {
+			System.err.println("Error: No server currently running.");
 			System.exit(1);
 		} catch (IOException e) {
 			e.printStackTrace();
