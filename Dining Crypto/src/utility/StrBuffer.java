@@ -33,6 +33,8 @@ public class StrBuffer {
 	
 	public String next() {
 		String ret = array[readPosition];
+		array[readPosition] = null;
+		
 		if (ret!=null) {
 			readPosition++;
 		}
