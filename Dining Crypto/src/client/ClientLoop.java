@@ -89,8 +89,10 @@ public class ClientLoop implements Input {
 					
 					// Collate the results for the round and display them TODO: alter line below
 					String r = collate(roundResults);
-					System.out.println("Round result: " + r);
-					guiRef.outputString(r);
+					if (r.length() > 0) {
+						System.out.println("Round result: " + r.length());
+						guiRef.outputString(r);
+					}
 				} else if (received.getMessage().equals(CommunicationProtocol.SHUTDOWN)) {
 					break;
 				} else {

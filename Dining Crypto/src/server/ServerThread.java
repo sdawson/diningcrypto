@@ -8,6 +8,11 @@ import communication.CommunicationProtocol;
 import communication.KeySet;
 import communication.Message;
 
+/**
+ * The ServerThread class represents
+ * @author soph
+ *
+ */
 public class ServerThread extends Thread {
 	private ArrayList<ClientSocketInfo> clients = null;
 	private int clientID;
@@ -22,9 +27,8 @@ public class ServerThread extends Thread {
 	
 	public void run() {
 		Message output;
-		System.err.println("In a server thread (right at the start)");
+		int count = 0;
 		ClientSocketInfo clientConnection = clients.get(clientID);
-		System.out.println("perceived size of client socket array: " + clients.size());
 		/* Want to start doing message passing rounds once a decent number (3 for a start)
 		 * of clients have actually connected.  This limit can be changed, but need
 		 * to stop letting them in at some stage so that the server can calculate
@@ -35,10 +39,10 @@ public class ServerThread extends Thread {
 				// Send keys to the client that is connected here
 				// only if the client hasn't already received a keyset
 
-				System.out.println("Sending keys to client " + clientID);
+				//System.out.println("Sending keys to client " + clientID);
 				if (sharedInfo.getReplies() < sharedInfo.getNumberClients())
 					sendKeys(clientConnection);
-				System.out.println("Sent keys to client " + clientID);
+				//System.out.println("Sent keys to client " + clientID);
 				
 				/* All the threads have received their set of keys for the round,
 				 * so reset the reply count if it hasn't
@@ -65,12 +69,18 @@ public class ServerThread extends Thread {
 					; // Wait until all clients have send a message back
 				// Then send all the resulting messages for the round back to the client				
 				// controlled by this thread.
+				String rr = collate();
+				if (rr.length() > 0)
+					System.err.println(rr);
 				sendResult(clientConnection);
 				while (sharedInfo.getReplies() < sharedInfo.getNumberClients())
 					;
 				
 				if (sharedInfo.getReplies() != 0)
 					sharedInfo.resetReplies();
+
+				if (sharedInfo.getCurrentRoundMessages().size() > 0)
+					sharedInfo.resetRoundMessages();
 				count++;
 			}
 			Message finalMessage = new Message(CommunicationProtocol.SHUTDOWN);
@@ -91,6 +101,15 @@ public class ServerThread extends Thread {
 			e.printStackTrace();
 			System.exit(1);
 		}
+	}
+	
+	// TESTING METHOD ONLY
+	private String collate() {
+		String s = new String();
+		for (Message m : sharedInfo.getCurrentRoundMessages()) {
+			s.concat(m.getMessage());
+		}
+		return s;
 	}
 
 	private void sendKeys(ClientSocketInfo client) throws IOException {
@@ -119,7 +138,7 @@ public class ServerThread extends Thread {
 		
 		Message reply = client.receiveMessage();
 		if (reply.getMessage().equals(CommunicationProtocol.ACK)) {
-			System.out.println("Incrementing no of replies");
+			//System.out.println("Incrementing no of replies");
 			sharedInfo.incrementReplies();
 		} else {
 			return;  // probably want to reset here instead
