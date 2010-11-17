@@ -61,12 +61,12 @@ public class ClientLoop implements Input {
 					 */
 					break;
 				}
-				System.out.println("Got a keyset");
+				//System.out.println("Got a keyset");
 				connection.send(new Message(CommunicationProtocol.ACK));
-				System.out.println("Send an ack");
+				//System.out.println("Send an ack");
 				received = connection.receiveMessage();
 				if (received.getMessage().equals(CommunicationProtocol.STARTROUND)) {
-					System.out.println("Server has requested the start of a round");
+					//System.out.println("Server has requested the start of a round");
 					/* Sending a message (or nothing, if the client doesn't want to
 					 * send anything this round.
 					 */
@@ -96,8 +96,10 @@ public class ClientLoop implements Input {
 					connection.send(new Message(CommunicationProtocol.ACK));
 					// Collate the results for the round and display them TODO: alter line below
 					String r = collate(roundResults);
-					System.out.println("Round result: " + r);
-					guiRef.outputString(r);
+					if (r.length() > 0) {
+						System.out.println("Round result: " + r.length());
+						guiRef.outputString(r);
+					}
 				} else if (received.getMessage().equals(CommunicationProtocol.SHUTDOWN)) {
 					break;
 				} else {
