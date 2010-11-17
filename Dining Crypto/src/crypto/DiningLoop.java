@@ -1,4 +1,4 @@
-package client;
+package crypto;
 
 import interfaces.Input;
 import interfaces.Output;
@@ -6,6 +6,8 @@ import interfaces.Output;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
+
+import client.ClientConnection;
 
 import utility.StrBuffer;
 
@@ -20,7 +22,7 @@ import communication.Message;
  * @author Sophie Dawson
  *
  */
-public class ClientLoop implements Input {
+public class DiningLoop implements Input {
 	private final static int MAX_CHAR = '\uffff';
 	
 	private final ClientConnection connection;
@@ -30,10 +32,7 @@ public class ClientLoop implements Input {
 	private String currentMessage = null;
 	private int currentMessageIndex = 0;
 	
-	private boolean killFlag = false;
-	
-	
-	public ClientLoop(ClientConnection connection, Output output) {
+	public DiningLoop(ClientConnection connection, Output output) {
 		this.connection = connection;
 		this.guiRef = output;
 	}
@@ -146,7 +145,7 @@ public class ClientLoop implements Input {
 				 * Indicating that the server wants the client to
 				 * shut down, so break out of the client execution loop. 
 				 */
-				killFlag = true;
+				return null;
 		}
 		
 		System.out.println("Got a keyset");

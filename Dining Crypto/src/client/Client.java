@@ -1,10 +1,11 @@
 package client;
 
+import crypto.DiningLoop;
 import gui.GuiManager;
 
 /**
  * The main function that runs the GUI-based client,
- * and initializes theh connection between the client
+ * and initialises the connection between the client
  * and server.
  * 
  * @author Sophie Dawson
@@ -27,7 +28,7 @@ public class Client {
 		
 		// Connect to the chosen server
 		connection.connect();
-		ClientLoop loop = new ClientLoop(connection, guiManager);
+		DiningLoop loop = new DiningLoop(connection, guiManager);
 		guiManager.setInput(loop);
 		loop.run();
 		connection.disconnect();
