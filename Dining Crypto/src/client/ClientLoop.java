@@ -80,6 +80,7 @@ public class ClientLoop implements Input {
 						// TODO: actually create a term for the client to
 						// use that is translated into the protocol quit message
 						connection.send(new Message(input));
+						input = null;
 					} else {
 						connection.send(new Message(""));
 					}
