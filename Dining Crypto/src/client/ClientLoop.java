@@ -77,6 +77,7 @@ public class ClientLoop implements Input {
 					// Waiting for the result of the round
 					roundResults = connection.receiveRoundResults();
 					
+					//TODO: Change this to something more appropriate. ie one shutdown command from the server or something.
 					// If any of the messages returned are shutdown messages from
 					// the server, start the client shutdown process.
 					for (Message m : roundResults) {
@@ -87,12 +88,12 @@ public class ClientLoop implements Input {
 					// Otherwise acknowledge that the result has been received
 					connection.send(new Message(CommunicationProtocol.ACK));
 					
-					// Collate the results for the round and display them TODO: alter line below
-					String r = collate(roundResults);
-					if (r.length() > 0) {
-						System.out.println("Round result: " + r.length());
-						guiRef.outputString(r);
-					}
+					// Collate the results for the round
+					char r = collate(roundResults);
+					
+					// Display the result
+					guiRef.outputString("" + r);
+					
 				} else if (received.getMessage().equals(CommunicationProtocol.SHUTDOWN)) {
 					break;
 				} else {
@@ -100,22 +101,28 @@ public class ClientLoop implements Input {
 					break;
 				}
 			} catch (EOFException e) {
-				/* This is expected behavior, since it indicates
+				/* 
+				 * This is expected behaviour, since it indicates
 				 * one of the other clients/the server has disconnected. 
 				 */
+				
+				// TODO: do something about this exception
 			} catch (IOException e) {
+				// TODO: do something about this exception
 				e.printStackTrace();
 			}
 		}
 	}
 	
-	private String collate(ArrayList<Message> messages) {
-		String s = new String();
+	private char collate(ArrayList<Message> messages) {
+		int sum = 0;
 		
 		for (Message m : messages) {
-			s.concat(m.getMessage());
+			sum += Integer.parseInt(m.getMessage());
 		}
-		return s;
+		
+		//TODO: check for collision
+		return (char)sum;
 	}
 	
 	private KeySet getKeySet() throws IOException {
