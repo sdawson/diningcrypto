@@ -7,6 +7,8 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import utility.StrBuffer;
+
 import communication.CommunicationProtocol;
 import communication.KeySet;
 import communication.Message;
@@ -20,8 +22,13 @@ import communication.Message;
  */
 public class ClientLoop implements Input {
 	private final ClientConnection connection;
-	private String input = null;
 	private Output guiRef = null;
+	
+	private StrBuffer inputBuf = new StrBuffer(20);
+	private String currentMessage = null;
+	private int currentMessageIndex = 0;
+	
+	private boolean killFlag = false;
 	
 	public ClientLoop(ClientConnection connection, Output output) {
 		this.connection = connection;
@@ -49,52 +56,37 @@ public class ClientLoop implements Input {
 	public void run() {
 		Message received;
 		ArrayList<Message> roundResults;
+		
 		while (true) {
 			try {
 				// Get keyset for the round
-				try {
-				KeySet keys = connection.receiveKeySet();
-				} catch (ClassNotFoundException e) {
-					/* A message has been sent by the server instead,
-					 * Indicating that the server wants the client to
-					 * shut down, so break out of the client execution loop. 
-					 */
+				KeySet keys = getKeySet();
+				if (keys == null) {
+					// Something has gone wrong or we've
+					// received a shutdown command.
 					break;
 				}
-				//System.out.println("Got a keyset");
-				connection.send(new Message(CommunicationProtocol.ACK));
-				//System.out.println("Send an ack");
+				
+				
 				received = connection.receiveMessage();
 				if (received.getMessage().equals(CommunicationProtocol.STARTROUND)) {
-					//System.out.println("Server has requested the start of a round");
-					/* Sending a message (or nothing, if the client doesn't want to
-					 * send anything this round.
-					 */
-					if (input != null) {
-						/* TODO: THIS IS WHERE THE CLIENT SHOULD TAKE THE MESSAGE
-						 * SUBMITTED BY THE CLIENT (IF ANY), APPLY THE TRANSFORMS
-						 * IN KEYSET TO IT, THEN SUBMIT IT TO THE SERVER USING
-						 * THE FUNCTION CALL connection.send(new Message(resultOf
-						 * KeysetGoesHere).
-						 */
-						// TODO: actually create a term for the client to
-						// use that is translated into the protocol quit message
-						connection.send(new Message(input));
-						input = null;
-					} else {
-						connection.send(new Message(""));
-					}
+					System.out.println("Server has requested the start of a round");
+					
+					transmit(getNextChar(), keys);
+					
 					// Waiting for the result of the round
 					roundResults = connection.receiveRoundResults();
-					// If any of the message returned are shutdown messages from
+					
+					// If any of the messages returned are shutdown messages from
 					// the server, start the client shutdown process.
 					for (Message m : roundResults) {
 						if (m.getMessage().equals(CommunicationProtocol.SHUTDOWN))
 							break;
 					}
-					// Otherwise acknowledge that the result has been
-					// received and display it
+					
+					// Otherwise acknowledge that the result has been received
 					connection.send(new Message(CommunicationProtocol.ACK));
+					
 					// Collate the results for the round and display them TODO: alter line below
 					String r = collate(roundResults);
 					if (r.length() > 0) {
@@ -116,7 +108,7 @@ public class ClientLoop implements Input {
 			}
 		}
 	}
-
+	
 	private String collate(ArrayList<Message> messages) {
 		String s = new String();
 		
@@ -126,10 +118,58 @@ public class ClientLoop implements Input {
 		return s;
 	}
 	
+	private KeySet getKeySet() throws IOException {
+		KeySet keys = null;
+		try {
+			 keys = connection.receiveKeySet();
+		} catch (ClassNotFoundException e) {
+				/* A message has been sent by the server instead,
+				 * Indicating that the server wants the client to
+				 * shut down, so break out of the client execution loop. 
+				 */
+				killFlag = true;
+		}
+		
+		System.out.println("Got a keyset");
+		connection.send(new Message(CommunicationProtocol.ACK));
+		System.out.println("Send an ack");
+		
+		return keys;
+	}
+	
+	private char getNextChar() {
+		if (currentMessage == null) {
+			currentMessage = inputBuf.next();	
+		}
+		
+		if (currentMessage == null) {
+			return (char)0;
+		} else {
+			if (currentMessageIndex < currentMessage.length()) {
+				char ret =  currentMessage.charAt(currentMessageIndex);
+				currentMessageIndex++;
+				return ret;
+			} else {
+				// Reached the end of the currentMessage
+				currentMessage = null;
+				currentMessageIndex = 0;
+				
+				return (char)0;
+			}
+		}
+	}
+	private void transmit(char c, KeySet keys) throws IOException {
+		/*
+		 * Send the message (or nothing, if the client doesn't want to
+		 * send anything this round.
+		 */
+		int output = keys.sum() + (int)c;
+		connection.send(new Message("" +  output));
+	}
+
 	@Override
 	public void inputString(String str) {
-		//TODO: Some sort of buffering so we don't need to worry about thread safety
-		this.input = str;
-		System.err.println("Message received!! " + str);
+		inputBuf.add(str);
+		System.out.println("Message " + str + " added to buffer.");
 	}
 }
