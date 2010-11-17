@@ -37,4 +37,14 @@ public class Key implements Serializable {
 	public static Key generateRandomKey() {
 		return new Key(RandomGenerator.generateInt(), null);
 	}
+	
+	public String toString() {
+		String str = "(" + key + ",";
+		if (op == Keyop.ADD)
+			str = str + "+";
+		else
+			str = str + "-";
+		
+		return str + ")";
+	}
 }

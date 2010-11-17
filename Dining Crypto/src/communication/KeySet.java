@@ -54,4 +54,12 @@ public class KeySet implements Serializable {
 		}
 	}
 
+	public String toString() {
+		String str = "[";
+		for (Key k : keys) {
+			str = str + k.toString() + ",";
+		}
+		
+		return str + "]";
+	}
 }
