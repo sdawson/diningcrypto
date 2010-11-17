@@ -29,13 +29,18 @@ public class ServerThread extends Thread {
 		Message output;
 		int count = 0;
 		ClientSocketInfo clientConnection = clients.get(clientID);
+		
 		/* Want to start doing message passing rounds once a decent number (3 for a start)
 		 * of clients have actually connected.  This limit can be changed, but need
 		 * to stop letting them in at some stage so that the server can calculate
 		 * key-pairs etc.
 		 */
 		try {
-			while (true) { // Assumes that all the clients have connected already
+			// Generate the initial set of keysets.
+			sharedInfo.generateKeySets();
+
+			while (true) {
+				// Assumes that all the clients have connected already
 				// Send keys to the client that is connected here
 				// only if the client hasn't already received a keyset
 
@@ -58,21 +63,20 @@ public class ServerThread extends Thread {
 				// round back
 				output = clientConnection.receiveMessage();
 
-				if (output.getMessage().equals(CommunicationProtocol.CLIENTEXIT))
+				if (output.getMessage().equals(CommunicationProtocol.CLIENT_EXIT))
 					break;
 
+				// Add the output to the shared output ArrayList
 				sharedInfo.add(output);
-				// incrementing is auto taken care of
-				// by keeping track of the size of the message array for
-				// the current round
+				
+				// Wait until all clients have send a message back
 				while (sharedInfo.getNoOfMessages() < sharedInfo.getNumberClients())
-					; // Wait until all clients have send a message back
+					;
+				
 				// Then send all the resulting messages for the round back to the client				
 				// controlled by this thread.
-				String rr = collate();
-				if (rr.length() > 0)
-					System.err.println(rr);
-				sendResult(clientConnection);
+				sendResults(clientConnection);
+				
 				while (sharedInfo.getReplies() < sharedInfo.getNumberClients())
 					;
 				
@@ -102,21 +106,10 @@ public class ServerThread extends Thread {
 			System.exit(1);
 		}
 	}
-	
-	// TESTING METHOD ONLY
-	private String collate() {
-		String s = new String();
-		for (Message m : sharedInfo.getCurrentRoundMessages()) {
-			s.concat(m.getMessage());
-		}
-		return s;
-	}
 
 	private void sendKeys(ClientSocketInfo client) throws IOException {
 		// Get the keyset for this round
-		//KeySet key = sharedInfo.getKeySet();
-		// THIS IS JUST FOR TESTING
-		KeySet key = null;
+		KeySet key = sharedInfo.getKeySet();
 		
 		// Send the KeySet to the client
 		client.send(key);
@@ -129,24 +122,31 @@ public class ServerThread extends Thread {
 			// The keyset was not received correctly (needs to
 			// be resent)
 			
-			sendKeys(client);
+			System.err.println("Failed to send keys to the client");
+			System.exit(0);
 		}
 	}
 	
-	private void sendResult(ClientSocketInfo client) throws IOException {
-		client.send(sharedInfo.getCurrentRoundMessages());
+	private void sendResults(ClientSocketInfo client) throws IOException {
+		// Get the results for this round
+		ArrayList<Message> results = new ArrayList<Message>(sharedInfo.getCurrentRoundMessages());
 		
+		// Send the results to the client
+		client.send(results);
+
 		Message reply = client.receiveMessage();
 		if (reply.getMessage().equals(CommunicationProtocol.ACK)) {
-			//System.out.println("Incrementing no of replies");
+			// The results were received by the client correctly
 			sharedInfo.incrementReplies();
 		} else {
-			return;  // probably want to reset here instead
+			// The results were not received correctly (needs to
+			// be resent?)
+			System.err.println("Failed to send results to the client");
+			System.exit(0);
 		}
 	}
 
-	/* TODO: Change hardcoded strings */
 	private void sendStartRound(ClientSocketInfo client) throws IOException {
-		client.send(new Message(CommunicationProtocol.STARTROUND));
+		client.send(new Message(CommunicationProtocol.START_ROUND));
 	}
 }

@@ -39,15 +39,19 @@ public class KeySet implements Serializable {
 	}
 	
 	public int sum() {
-		int sum = 0;
-		for (Key k : keys) {
-			if ( k.getKeyop()==Keyop.ADD)
-				sum += k.getKey();
-			else
-				sum -= k.getKey();
+		if (keys != null) {
+			int sum = 0;
+			for (Key k : keys) {
+				if ( k.getKeyop()==Keyop.ADD)
+					sum += k.getKey();
+				else
+					sum -= k.getKey();
+			}
+			
+			return sum;
+		} else {
+			return 0;
 		}
-		
-		return sum;
 	}
 
 }

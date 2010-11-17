@@ -33,7 +33,7 @@ public class TestClient {
 				connection.send(new Message(CommunicationProtocol.ACK));
 				System.out.println("Send an ack");
 				received = connection.receiveMessage();
-				if (received.getMessage().equals(CommunicationProtocol.STARTROUND)) {
+				if (received.getMessage().equals(CommunicationProtocol.START_ROUND)) {
 					System.out.println("Server has requested the start of a round");
 					/* Sending a message (or nothing, if the client doesn't want to
 					 * send anything this round.

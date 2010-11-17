@@ -1,6 +1,6 @@
 package communication;
 
-import java.security.SecureRandom;
+import utility.RandomGenerator;
 
 /**
  * Represents a single key that is shared between two clients.
@@ -31,16 +31,6 @@ public class Key {
 	 * Generates a random key with a key operation of null.
 	 */
 	public static Key generateRandomKey() {
-		SecureRandom rand = new SecureRandom();
-		
-		byte[] b = new byte[4];
-		rand.nextBytes(b);
-		
-		int i = (new Byte(b[0])).intValue() +
-				(new Byte(b[1])).intValue()*Byte.MAX_VALUE +
-				(new Byte(b[1])).intValue()*Byte.MAX_VALUE*Byte.MAX_VALUE +
-				(new Byte(b[1])).intValue()*Byte.MAX_VALUE*Byte.MAX_VALUE*Byte.MAX_VALUE;
-		
-		return new Key(i, null);
+		return new Key(RandomGenerator.generateInt(), null);
 	}
 }

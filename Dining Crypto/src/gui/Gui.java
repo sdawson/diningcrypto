@@ -67,7 +67,7 @@ public class Gui extends JFrame implements Output, WindowListener {
 	}
 	
 	public void displayText(String str) {
-		textDisplay.append("\n" + str);
+		textDisplay.append(str);
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-package client;
+package crypto;
 
 import interfaces.Input;
 import interfaces.Output;
@@ -6,6 +6,8 @@ import interfaces.Output;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
+
+import client.ClientConnection;
 
 import utility.StrBuffer;
 
@@ -20,17 +22,13 @@ import communication.Message;
  * @author Sophie Dawson
  *
  */
-public class ClientLoop implements Input {
+public class SimpleLoop implements Input {
 	private final ClientConnection connection;
 	private Output guiRef = null;
 	
 	private StrBuffer inputBuf = new StrBuffer(20);
-	private String currentMessage = null;
-	private int currentMessageIndex = 0;
 	
-	private boolean killFlag = false;
-	
-	public ClientLoop(ClientConnection connection, Output output) {
+	public SimpleLoop(ClientConnection connection, Output output) {
 		this.connection = connection;
 		this.guiRef = output;
 	}
@@ -59,7 +57,7 @@ public class ClientLoop implements Input {
 		
 		while (true) {
 			try {
-				// Get keyset for the round
+				// Get keyset for the round - we won't use the keyset but the server will send it anyway
 				KeySet keys = getKeySet();
 				if (keys == null) {
 					// Something has gone wrong or we've
@@ -72,11 +70,12 @@ public class ClientLoop implements Input {
 				if (received.getMessage().equals(CommunicationProtocol.STARTROUND)) {
 					System.out.println("Server has requested the start of a round");
 					
-					transmit(getNextChar(), keys);
+					transmit(inputBuf.next());
 					
 					// Waiting for the result of the round
 					roundResults = connection.receiveRoundResults();
 					
+					//TODO: Change this to something more appropriate. ie one shutdown command from the server or something.
 					// If any of the messages returned are shutdown messages from
 					// the server, start the client shutdown process.
 					for (Message m : roundResults) {
@@ -87,12 +86,12 @@ public class ClientLoop implements Input {
 					// Otherwise acknowledge that the result has been received
 					connection.send(new Message(CommunicationProtocol.ACK));
 					
-					// Collate the results for the round and display them TODO: alter line below
+					// Collate the results for the round
 					String r = collate(roundResults);
-					if (r.length() > 0) {
-						System.out.println("Round result: " + r.length());
-						guiRef.outputString(r);
-					}
+					
+					// Display the result
+					guiRef.outputString(r + '\n');
+					
 				} else if (received.getMessage().equals(CommunicationProtocol.SHUTDOWN)) {
 					break;
 				} else {
@@ -100,22 +99,27 @@ public class ClientLoop implements Input {
 					break;
 				}
 			} catch (EOFException e) {
-				/* This is expected behavior, since it indicates
+				/* 
+				 * This is expected behaviour, since it indicates
 				 * one of the other clients/the server has disconnected. 
 				 */
+				
+				// TODO: do something about this exception
 			} catch (IOException e) {
+				// TODO: do something about this exception
 				e.printStackTrace();
 			}
 		}
 	}
 	
 	private String collate(ArrayList<Message> messages) {
-		String s = new String();
+		String sum = "";
 		
 		for (Message m : messages) {
-			s.concat(m.getMessage());
+			sum += m.getMessage() + '\n';
 		}
-		return s;
+
+		return sum;
 	}
 	
 	private KeySet getKeySet() throws IOException {
@@ -127,7 +131,7 @@ public class ClientLoop implements Input {
 				 * Indicating that the server wants the client to
 				 * shut down, so break out of the client execution loop. 
 				 */
-				killFlag = true;
+			return null;
 		}
 		
 		System.out.println("Got a keyset");
@@ -137,34 +141,15 @@ public class ClientLoop implements Input {
 		return keys;
 	}
 	
-	private char getNextChar() {
-		if (currentMessage == null) {
-			currentMessage = inputBuf.next();	
-		}
-		
-		if (currentMessage == null) {
-			return (char)0;
-		} else {
-			if (currentMessageIndex < currentMessage.length()) {
-				char ret =  currentMessage.charAt(currentMessageIndex);
-				currentMessageIndex++;
-				return ret;
-			} else {
-				// Reached the end of the currentMessage
-				currentMessage = null;
-				currentMessageIndex = 0;
-				
-				return (char)0;
-			}
-		}
-	}
-	private void transmit(char c, KeySet keys) throws IOException {
+	private void transmit(String str) throws IOException {
 		/*
 		 * Send the message (or nothing, if the client doesn't want to
 		 * send anything this round.
 		 */
-		int output = keys.sum() + (int)c;
-		connection.send(new Message("" +  output));
+		if (str == null) {
+			str = "";
+		}
+		connection.send(new Message(str));
 	}
 
 	@Override
