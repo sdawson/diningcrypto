@@ -1,5 +1,7 @@
 package client;
 
+import javax.swing.JOptionPane;
+
 import crypto.DiningLoop;
 import gui.GuiManager;
 
@@ -28,7 +30,12 @@ public class Client {
 		
 		
 		// Connect to the chosen server
-		connection.connect();
+		String error = connection.connect();
+		if (error.length() != 0) {
+			guiManager.outputString(error);
+			JOptionPane.showMessageDialog(null, error, "Error", JOptionPane.ERROR_MESSAGE);
+			System.exit(1);
+		}
 		DiningLoop loop = new DiningLoop(connection, guiManager);
 		guiManager.setInput(loop);
 		loop.run();

@@ -37,7 +37,7 @@ public class ClientConnection {
 	 * Connects to the server specified during the creation
 	 * of the ClientConnection object.
 	 */
-	public void connect() {
+	public String connect() {
 		try {
 			socket = new Socket(serverAddress, serverPort);
 			System.out.println("pre client stream collection");
@@ -46,15 +46,14 @@ public class ClientConnection {
 			in = new ObjectInputStream(socket.getInputStream());
 			System.out.println("post client stream collection");
 		} catch (UnknownHostException e) {
-			System.err.println("Error: Unknown host");
-			System.exit(1);
+			return new String("Unknown host");
 		} catch (ConnectException e) {
-			System.err.println("Error: No server currently running.");
-			System.exit(1);
+			return new String("No server currently running.");
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
+		return new String("");
 	}
 
 	/**
