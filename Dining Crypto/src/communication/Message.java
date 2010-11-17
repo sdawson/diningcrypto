@@ -1,7 +1,6 @@
 package communication;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * A serializable object containing a message that can

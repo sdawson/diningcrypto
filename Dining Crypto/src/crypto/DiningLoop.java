@@ -71,9 +71,8 @@ public class DiningLoop implements Input {
 				
 				
 				received = connection.receiveMessage();
-				if (received.getMessage().equals(CommunicationProtocol.STARTROUND)) {
-					System.out.println("Server has requested the start of a round");
-					
+				if (received.getMessage().equals(CommunicationProtocol.START_ROUND)) {
+					// Transmit the next character.
 					transmit(getNextChar(), keys);
 					
 					// Waiting for the result of the round
@@ -119,8 +118,8 @@ public class DiningLoop implements Input {
 	}
 	
 	private char collate(ArrayList<Message> messages) {
-		int sum = 0;
-		
+		int sum = 0;	
+
 		for (Message m : messages) {
 			sum += Integer.parseInt(m.getMessage());
 		}
@@ -132,7 +131,7 @@ public class DiningLoop implements Input {
 		} else {
 			sum -= MAX_CHAR;
 		}
-		
+
 		return (char)sum;
 	}
 	
@@ -148,9 +147,7 @@ public class DiningLoop implements Input {
 				return null;
 		}
 		
-		System.out.println("Got a keyset");
 		connection.send(new Message(CommunicationProtocol.ACK));
-		System.out.println("Send an ack");
 		
 		return keys;
 	}

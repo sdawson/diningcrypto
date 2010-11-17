@@ -72,11 +72,11 @@ public class SharedServerInfo {
 		return set; 
 	}
 	
-	private void generateKeySets() {
+	public void generateKeySets() {
 		// Create a set for each client
-		KeySet[] sets = new KeySet[numberClients];
+		keysets = new KeySet[numberClients];
 		for (int i=0 ; i<numberClients ; i++ ) {
-			sets[i] = new KeySet();
+			keysets[i] = new KeySet();
 		}
 		
 		// Populate each set
@@ -90,11 +90,9 @@ public class SharedServerInfo {
 					kn = new Key(k.getKey(), Keyop.SUBTRACT);
 				
 				// Add the keys to the sets
-				sets[i].addKey(kp);
-				sets[j].addKey(kn);
+				keysets[i].addKey(kp);
+				keysets[j].addKey(kn);
 			}
 		}
-		
-		keysets = sets;
 	}
 }

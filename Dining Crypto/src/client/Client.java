@@ -14,7 +14,8 @@ import gui.GuiManager;
 public class Client {
 	private static ClientConnection connection = null;
 
-	public static void main(String[] args) {		
+	public static void main(String[] args) {
+		System.out.println("Starting Client.");
 		if (args.length == 2) {
 			connection = new ClientConnection(args[0], 
 					new Integer(args[1]).intValue());
@@ -33,6 +34,6 @@ public class Client {
 		loop.run();
 		connection.disconnect();
 		
-		
+		System.exit(0);
 	}
 }
