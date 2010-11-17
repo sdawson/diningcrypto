@@ -82,4 +82,9 @@ public class ClientSocketInfo {
 		out.close();
 		clientSocket.close();
 	}
+	
+	@Override
+	public String toString() {
+		return clientSocket.toString();
+	}
 }

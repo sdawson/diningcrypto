@@ -121,6 +121,7 @@ public class ClientConnection {
 		}
 	}
 	
+	@Override
 	public String toString() {
 		return serverAddress + ":" + serverPort;
 	}

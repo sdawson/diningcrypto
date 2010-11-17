@@ -1,5 +1,7 @@
 package communication;
 
+import java.io.Serializable;
+
 import utility.RandomGenerator;
 
 /**
@@ -10,7 +12,9 @@ import utility.RandomGenerator;
  * @author Joshua Torrance
  *
  */
-public class Key {
+public class Key implements Serializable {
+	private static final long serialVersionUID = -709609931265527197L;
+	
 	private final int key;
 	private final Keyop op;
 	

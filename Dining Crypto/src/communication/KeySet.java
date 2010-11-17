@@ -1,6 +1,7 @@
 package communication;
 
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -16,10 +17,9 @@ import java.util.Set;
  */
 public class KeySet implements Serializable {
 	private static final long serialVersionUID = 5671467559046189587L;
-	private Set<Key> keys;
+	private HashSet<Key> keys = new HashSet<Key>();
 	
 	public KeySet() {
-		keys = null;
 	}
 	
 	/**
