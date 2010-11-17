@@ -78,7 +78,6 @@ public class DiningLoop implements Input {
 					// Waiting for the result of the round
 					roundResults = connection.receiveRoundResults();
 					
-					//TODO: Change this to something more appropriate. ie one shutdown command from the server or something.
 					// If any of the messages returned are shutdown messages from
 					// the server, start the client shutdown process.
 					for (Message m : roundResults) {
