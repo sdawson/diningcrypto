@@ -21,6 +21,8 @@ import communication.Message;
  *
  */
 public class ClientLoop implements Input {
+	private final static int MAX_CHAR = '\uffff';
+	
 	private final ClientConnection connection;
 	private Output guiRef = null;
 	
@@ -29,6 +31,7 @@ public class ClientLoop implements Input {
 	private int currentMessageIndex = 0;
 	
 	private boolean killFlag = false;
+	
 	
 	public ClientLoop(ClientConnection connection, Output output) {
 		this.connection = connection;
@@ -91,8 +94,10 @@ public class ClientLoop implements Input {
 					// Collate the results for the round
 					char r = collate(roundResults);
 					
-					// Display the result
-					guiRef.outputString("" + r);
+					if (r!=0) {
+						// Display the result
+						guiRef.outputString("" + r);
+					}
 					
 				} else if (received.getMessage().equals(CommunicationProtocol.SHUTDOWN)) {
 					break;
@@ -121,7 +126,14 @@ public class ClientLoop implements Input {
 			sum += Integer.parseInt(m.getMessage());
 		}
 		
-		//TODO: check for collision
+		if (sum==0) {
+			// no message has been transmitted
+		} else if (sum > 2*MAX_CHAR) {
+			// There is a collision.
+		} else {
+			sum -= MAX_CHAR;
+		}
+		
 		return (char)sum;
 	}
 	
@@ -165,12 +177,20 @@ public class ClientLoop implements Input {
 			}
 		}
 	}
+	
 	private void transmit(char c, KeySet keys) throws IOException {
 		/*
 		 * Send the message (or nothing, if the client doesn't want to
 		 * send anything this round.
 		 */
-		int output = keys.sum() + (int)c;
+		int cint = c;
+		if (c!= 0) {
+			// Add \uffff (max unicode value to the output so we can detect collisions
+			cint += MAX_CHAR;
+		}
+		
+		int output = keys.sum() + cint;
+		
 		connection.send(new Message("" +  output));
 	}
 
