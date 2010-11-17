@@ -96,6 +96,7 @@ public class ClientConnection {
 		return keyset;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public ArrayList<Message> receiveRoundResults() throws IOException {
 		ArrayList<Message> messages = null;
 		
@@ -119,5 +120,8 @@ public class ClientConnection {
 			e.printStackTrace();
 		}
 	}
-
+	
+	public String toString() {
+		return serverAddress + ":" + serverPort;
+	}
 }

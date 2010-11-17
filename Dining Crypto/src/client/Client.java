@@ -28,6 +28,7 @@ public class Client {
 		
 		
 		// Connect to the chosen server
+		System.out.println("Connecting to server: " + connection.toString());
 		connection.connect();
 		DiningLoop loop = new DiningLoop(connection, guiManager);
 		guiManager.setInput(loop);
