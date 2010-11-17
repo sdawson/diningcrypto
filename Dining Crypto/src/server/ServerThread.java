@@ -63,16 +63,7 @@ public class ServerThread extends Thread {
 				// the current round
 				while (sharedInfo.getNoOfMessages() < sharedInfo.getNumberClients())
 					; // Wait until all clients have send a message back
-				// need to collate all the replies here
-				if (sharedInfo.getRoundResult() == null) {
-					/* TODO: THIS IS WHERE THE SERVER SHOULD TAKE ALL THE MESSAGES
-					 * RECEIVED THIS ROUND (THEY ARE IN THE ARRAYLIST RETURNED BY
-					 * sharedInfo.getCurrentRoundMessages() AND COMBINE THEM TO
-					 * FORM A FINAL VALUE FOR THE CURRENT ROUND.
-					 */
-				}
-				
-				// broadcasting the message back to the client
+				// Then send all the resulting messages for the round back to the client				
 				// controlled by this thread.
 				sendResult(clientConnection);
 				while (sharedInfo.getReplies() < sharedInfo.getNumberClients())
@@ -80,6 +71,7 @@ public class ServerThread extends Thread {
 				
 				if (sharedInfo.getReplies() != 0)
 					sharedInfo.resetReplies();
+				count++;
 			}
 			Message finalMessage = new Message(CommunicationProtocol.SHUTDOWN);
 			for (ClientSocketInfo c : clients) {
@@ -123,7 +115,7 @@ public class ServerThread extends Thread {
 	}
 	
 	private void sendResult(ClientSocketInfo client) throws IOException {
-		client.send(sharedInfo.getRoundResult());
+		client.send(sharedInfo.getCurrentRoundMessages());
 		
 		Message reply = client.receiveMessage();
 		if (reply.getMessage().equals(CommunicationProtocol.ACK)) {

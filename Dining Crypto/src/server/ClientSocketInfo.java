@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 
 import communication.KeySet;
 import communication.Message;
@@ -66,6 +67,10 @@ public class ClientSocketInfo {
 	 */
 	public void send(KeySet keys) throws IOException {
 		out.writeObject(keys);
+	}
+
+	public void send(ArrayList<Message> currentRoundMessages) throws IOException {
+		out.writeObject(currentRoundMessages);
 	}
 
 	/**

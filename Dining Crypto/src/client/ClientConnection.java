@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 
 import communication.KeySet;
 import communication.Message;
@@ -89,6 +90,17 @@ public class ClientConnection {
 
 		keyset = (KeySet) in.readObject();
 		return keyset;
+	}
+	
+	public ArrayList<Message> receiveRoundResults() throws IOException {
+		ArrayList<Message> messages = null;
+		
+		try {
+			messages = (ArrayList<Message>) in.readObject();
+		} catch (ClassNotFoundException e) {
+			return null;
+		}
+		return messages;
 	}
 
 	/**
