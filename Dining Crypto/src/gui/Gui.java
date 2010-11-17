@@ -89,8 +89,7 @@ public class Gui extends JFrame implements Output, WindowListener {
 
 	@Override
 	public void windowClosing(WindowEvent arg0) {
-		// Do nothing special
-		outputString("KILL");
+		System.exit(0);
 	}
 
 	@Override
