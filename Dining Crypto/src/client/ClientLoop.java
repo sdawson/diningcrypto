@@ -6,6 +6,8 @@ import interfaces.Output;
 import java.io.EOFException;
 import java.io.IOException;
 
+import utility.StrBuffer;
+
 import communication.CommunicationProtocol;
 import communication.KeySet;
 import communication.Message;
@@ -19,8 +21,9 @@ import communication.Message;
  */
 public class ClientLoop implements Input {
 	private final ClientConnection connection;
-	private String input = null;
+	private StrBuffer inputBuf = new StrBuffer(20);
 	private Output guiRef = null;
+	private boolean killFlag = false;
 	
 	public ClientLoop(ClientConnection connection, Output output) {
 		this.connection = connection;
@@ -47,21 +50,14 @@ public class ClientLoop implements Input {
 	 */
 	public void run() {
 		Message received;
+		String currentMessage = null;
+		
 		while (true) {
 			try {
 				// Get keyset for the round
-				try {
-				KeySet keys = connection.receiveKeySet();
-				} catch (ClassNotFoundException e) {
-					/* A message has been sent by the server instead,
-					 * Indicating that the server wants the client to
-					 * shut down, so break out of the client execution loop. 
-					 */
-					break;
-				}
-				System.out.println("Got a keyset");
-				connection.send(new Message(CommunicationProtocol.ACK));
-				System.out.println("Send an ack");
+				KeySet keys = getKeySet();
+				
+				
 				received = connection.receiveMessage();
 				if (received.getMessage().equals(CommunicationProtocol.STARTROUND)) {
 					System.out.println("Server has requested the start of a round");
@@ -106,11 +102,29 @@ public class ClientLoop implements Input {
 			}
 		}
 	}
+	
+	private KeySet getKeySet() throws IOException {
+		KeySet keys;
+		try {
+			 keys = connection.receiveKeySet();
+		} catch (ClassNotFoundException e) {
+				/* A message has been sent by the server instead,
+				 * Indicating that the server wants the client to
+				 * shut down, so break out of the client execution loop. 
+				 */
+				killFlag = true;
+		}
+		
+		System.out.println("Got a keyset");
+		connection.send(new Message(CommunicationProtocol.ACK));
+		System.out.println("Send an ack");
+		
+		return keys;
+	}
 
 	@Override
 	public void inputString(String str) {
-		//TODO: Some sort of buffering so we don't need to worry about thread safety
-		this.input = str;
-		System.err.println("Message received!! " + str);
+		inputBuf.add(str);
+		System.out.println("Message " + str + " added to buffer.");
 	}
 }
