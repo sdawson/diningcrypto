@@ -17,27 +17,27 @@ import communication.Message;
  *
  */
 public class SharedServerInfo {
-	private int noOfReplies, numberClients, keysDistributed = 0;
+	private int noSent = 0, numberClients, keysDistributed = 0;
 	private ArrayList<Message> currentRoundMessages;
 	private KeySet[] keysets = null;
 	
 	public SharedServerInfo(int noOfReplies, int numberClients,
 			ArrayList<Message> currentRoundMessages) {
-		this.noOfReplies = noOfReplies;
+		this.noSent = noOfReplies;
 		this.numberClients = numberClients;
 		this.currentRoundMessages = currentRoundMessages;
 	}
 	
-	public synchronized void incrementReplies() {
-		this.noOfReplies++;
+	public synchronized void incrementSent() {
+		this.noSent++;
 	}
 	
-	public synchronized void resetReplies() {
-		this.noOfReplies = 0;
+	public synchronized void resetSent() {
+		this.noSent = 0;
 	}
 	
-	public synchronized int getReplies() {
-		return this.noOfReplies;
+	public synchronized int getSent() {
+		return this.noSent;
 	}
 	
 	public synchronized int getNumberClients() {
@@ -52,7 +52,7 @@ public class SharedServerInfo {
 		return this.currentRoundMessages;
 	}
 	
-	public synchronized void add(Message message) {
+	public synchronized void addOutput(Message message) {
 		this.currentRoundMessages.add(message);
 	}
 	

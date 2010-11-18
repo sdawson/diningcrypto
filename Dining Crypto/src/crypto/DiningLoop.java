@@ -77,12 +77,9 @@ public class DiningLoop implements Input {
 					
 					// Waiting for the result of the round
 					roundResults = connection.receiveRoundResults();
-					
-					// If any of the messages returned are shutdown messages from
-					// the server, start the client shutdown process.
-					for (Message m : roundResults) {
-						if (m.getMessage().equals(CommunicationProtocol.SHUTDOWN))
-							break;
+					if (roundResults.size()==0) {
+						System.err.println("roundresults has size zero!!! exiting");
+						System.exit(0);
 					}
 					
 					// Otherwise acknowledge that the result has been received

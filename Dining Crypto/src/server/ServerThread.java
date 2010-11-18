@@ -27,7 +27,6 @@ public class ServerThread extends Thread {
 	
 	public void run() {
 		Message output = null;
-		int count = 0;
 		ClientSocketInfo clientConnection = clients.get(clientID);
 		
 		/* Want to start doing message passing rounds once a decent number (3 for a start)
@@ -40,61 +39,73 @@ public class ServerThread extends Thread {
 			sharedInfo.generateKeySets();
 
 			while (true) {
-				// Assumes that all the clients have connected already
-				// Send keys to the client that is connected here
-				// only if the client hasn't already received a keyset
-
-				//System.out.println("Sending keys to client " + clientID);
-				if (sharedInfo.getReplies() < sharedInfo.getNumberClients())
-					sendKeys(clientConnection);
-				//System.out.println("Sent keys to client " + clientID);
-				
-				/* All the threads have received their set of keys for the round,
-				 * so reset the reply count if it hasn't
-				 * already been done by another thread.
-				 */
-				if (sharedInfo.getReplies() != 0) {
-					sharedInfo.resetReplies();
-				}
+				// Send the keys for this round to the client.
+				sendKeys(clientConnection);
 
 				// Start the round at this point
 				sendStartRound(clientConnection);
-				
-				// Wait until all clients have send a message back
-				if (sharedInfo.getNoOfMessages() < sharedInfo.getNumberClients())
-					// Wait for the client to send an output for
-					// the round back
-					output = clientConnection.receiveMessage();
-				
+
+				// Wait for the client to send output for
+				// the round back
+				output = clientConnection.receiveMessage();
+					
 				if (output != null) {
 					// If an output was received by the connected client
 					// add it to the shared output ArrayList, as long
-					// as it wasn't an exit command.
-					if (output.getMessage().equals(CommunicationProtocol.CLIENT_EXIT))
+					// as it wasn't the exit command.
+					if (output.getMessage().equals(CommunicationProtocol.CLIENT_EXIT)) {
 						break;
-					sharedInfo.add(output);
+					} else {
+						sharedInfo.addOutput(output);
+						
+						// Clear output
+						output = null;
+					}
+				} else {
+					System.out.println("Output is null.");
+					System.exit(0);
 				}
 				
-				// Then send all the resulting messages for the round back to the client				
-				// controlled by this thread.				
-				if (sharedInfo.getReplies() < sharedInfo.getNumberClients())
-					sendResults(clientConnection);
+				// Wait until all clients have send their output back
+				synchronized (sharedInfo) {
+					if (sharedInfo.getNoOfMessages() < sharedInfo.getNumberClients()) {
+						try {
+							sharedInfo.wait();
+						} catch (InterruptedException e) {/* Continue */}
+					} else {
+						sharedInfo.notifyAll();
+					}
+				}
 				
-				if (sharedInfo.getReplies() != 0)
-					sharedInfo.resetReplies();
-
-				if (sharedInfo.getCurrentRoundMessages().size() > 0)
-					sharedInfo.resetRoundMessages();
-				count++;
+				// Then send all the outputs for the round back to the client.
+				sendResults(clientConnection);
+				
+				// Wait until all clients have been send the collection of outputs.
+				synchronized (sharedInfo) {
+					sharedInfo.incrementSent();
+					if (sharedInfo.getSent() < sharedInfo.getNumberClients()) {
+						try {
+							sharedInfo.wait();
+						} catch (InterruptedException e) {/* Continue */}
+					} else {
+						sharedInfo.resetRoundMessages();
+						sharedInfo.resetSent();
+						sharedInfo.notifyAll();
+					}
+				}
 			}
+			
 			Message finalMessage = new Message(CommunicationProtocol.SHUTDOWN);
 			for (ClientSocketInfo c : clients) {
-				System.err.println("sending a shutdown message");
+				System.err.println("Sending a shutdown message");
 				c.send(finalMessage);
 			}
+			
 			System.out.println("Sent all shutdowns...exiting");
+			
 			// Close socket connections for this client
 			clientConnection.close();
+			
 			System.exit(0);
 		} catch (EOFException e) {
 			// Server has lost the client connection due to the
@@ -117,7 +128,7 @@ public class ServerThread extends Thread {
 		Message reply = client.receiveMessage();
 		if (reply.getMessage().equals(CommunicationProtocol.ACK)) {
 			// The keyset was received by the client correctly
-			sharedInfo.incrementReplies();
+			return;
 		} else {
 			// The keyset was not received correctly (needs to
 			// be resent)
@@ -137,10 +148,9 @@ public class ServerThread extends Thread {
 		Message reply = client.receiveMessage();
 		if (reply.getMessage().equals(CommunicationProtocol.ACK)) {
 			// The results were received by the client correctly
-			sharedInfo.incrementReplies();
+			return;
 		} else {
-			// The results were not received correctly (needs to
-			// be resent?)
+			// The results were not received correctly
 			System.err.println("Failed to send results to the client");
 			System.exit(0);
 		}
