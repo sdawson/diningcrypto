@@ -5,11 +5,11 @@ import interfaces.Output;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 
-import client.ClientConnection;
-
 import utility.StrBuffer;
+import client.ClientConnection;
 
 import communication.CommunicationProtocol;
 import communication.KeySet;
@@ -31,7 +31,7 @@ public class DiningLoop implements Input {
 	private StrBuffer inputBuf = new StrBuffer(20);
 	private String currentMessage = null;
 	private int currentMessageIndex = 0;
-	
+		
 	public DiningLoop(ClientConnection connection, Output output) {
 		this.connection = connection;
 		this.guiRef = output;
@@ -72,7 +72,10 @@ public class DiningLoop implements Input {
 				
 				received = connection.receiveMessage();
 				if (received.getMessage().equals(CommunicationProtocol.START_ROUND)) {
-					// Transmit the next character.
+					// Transmit the next character, unless a collision
+					// has occurred.  In the case of a collision wait
+					// until a random number of rounds has passed before
+					// resending.
 					transmit(getNextChar(), keys);
 					
 					// Waiting for the result of the round
@@ -86,7 +89,7 @@ public class DiningLoop implements Input {
 					connection.send(new Message(CommunicationProtocol.ACK));
 					
 					// Collate the results for the round
-					char r = collate(roundResults);
+					char r = collate(roundResults, nextChar);
 					
 					if (r!=0) {
 						// Display the result
@@ -96,7 +99,6 @@ public class DiningLoop implements Input {
 						guiRef.outputString("\n");
 						inMessageFlag = false;
 					}
-					
 				} else if (received.getMessage().equals(CommunicationProtocol.SHUTDOWN)) {
 					break;
 				} else {
@@ -117,7 +119,11 @@ public class DiningLoop implements Input {
 		}
 	}
 	
-	private char collate(ArrayList<Message> messages) {
+	/* Need to check if we are already in a collision.
+	 * if this is the first collision, then set the round
+	 * counter starting.  if isCollision already true
+	 */
+	private char collate(ArrayList<Message> messages, char currentChar) {
 		int sum = 0;	
 
 		for (Message m : messages) {
@@ -128,6 +134,14 @@ public class DiningLoop implements Input {
 			// no message has been transmitted
 		} else if (sum > 2*MAX_CHAR) {
 			// There is a collision.
+			/* Adds a random delay to the buffer that
+			 * collided, so that the collision can be resolved.
+			 */
+			currentMessage = addDelayToBuffer();
+			
+			// Also don't want to print the collision,
+			// since it's usually a non-alphanumeric char
+			sum = 0;
 		} else {
 			sum -= MAX_CHAR;
 		}
@@ -172,6 +186,43 @@ public class DiningLoop implements Input {
 				return (char)0;
 			}
 		}
+	}
+	
+	private String addDelayToBuffer() {
+		// The extra 0 is just to pad out the section where
+		// the original value in the message used to be, since
+		// the index always gets higher (and otherwise you'll
+		// always have a delay one short of what was randomly
+		// generated.
+		SecureRandom rand = new SecureRandom();
+		
+		char nothing = (char) 0;
+		// This max was just a random choice.
+		// Just didn't want to include gigantic delays
+		int delay = rand.nextInt(currentMessage.length());
+		String messageDelay = repeat(String.valueOf(nothing), delay+1);
+		StringBuilder sb = new StringBuilder(currentMessage);
+		
+		if (currentMessageIndex == 0) {
+			// This should never happen, since the system
+			// doesn't realize a collision has occurred until
+			// the currentMessageIndex value has already been
+			// incremented.
+			System.err.println("Trying to insert before the beginning of the string");
+			System.exit(1);
+		} else {
+			sb.insert(currentMessageIndex-1, messageDelay);
+		}
+
+		return sb.toString();
+	}
+	
+	private String repeat(String s, int n) {
+		final StringBuilder sb = new StringBuilder();
+		for (int i=0; i<n; i++) {
+			sb.append(s);
+		}
+		return sb.toString();
 	}
 	
 	private void transmit(char c, KeySet keys) throws IOException {
