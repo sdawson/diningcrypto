@@ -59,6 +59,7 @@ public class DiningLoop implements Input {
 		Message received;
 		ArrayList<Message> roundResults;
 		boolean inMessageFlag = false;
+		StringBuilder outputMessage = new StringBuilder();
 		
 		while (true) {
 			try {
@@ -89,14 +90,17 @@ public class DiningLoop implements Input {
 					connection.send(new Message(CommunicationProtocol.ACK));
 					
 					// Collate the results for the round
-					char r = collate(roundResults);
+					char r = collate(roundResults, outputMessage);
 					
 					if (r!=0) {
-						// Display the result
-						guiRef.outputString("" + r);
+						// Add the result to the output array
+						// for printing once the whole message
+						// is received
+						outputMessage.append(r);
 						inMessageFlag = true;
 					} else if ( inMessageFlag ) {
-						guiRef.outputString("\n");
+						guiRef.outputString(outputMessage.toString() + "\n");
+						outputMessage = new StringBuilder();
 						inMessageFlag = false;
 					}
 				} else if (received.getMessage().equals(CommunicationProtocol.SHUTDOWN)) {
@@ -123,7 +127,8 @@ public class DiningLoop implements Input {
 	 * if this is the first collision, then set the round
 	 * counter starting.  if isCollision already true
 	 */
-	private char collate(ArrayList<Message> messages) {
+	private char collate(ArrayList<Message> messages,
+			StringBuilder outputMessage) {
 		int sum = 0;	
 
 		for (Message m : messages) {
@@ -138,6 +143,7 @@ public class DiningLoop implements Input {
 			 * collided, so that the collision can be resolved.
 			 */
 			currentMessage = addDelayToBuffer();
+			outputMessage = new StringBuilder();
 			
 			// Also don't want to print the collision,
 			// since it's usually a non-alphanumeric char
