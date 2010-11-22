@@ -89,7 +89,7 @@ public class DiningLoop implements Input {
 					connection.send(new Message(CommunicationProtocol.ACK));
 					
 					// Collate the results for the round
-					char r = collate(roundResults, nextChar);
+					char r = collate(roundResults);
 					
 					if (r!=0) {
 						// Display the result
@@ -123,7 +123,7 @@ public class DiningLoop implements Input {
 	 * if this is the first collision, then set the round
 	 * counter starting.  if isCollision already true
 	 */
-	private char collate(ArrayList<Message> messages, char currentChar) {
+	private char collate(ArrayList<Message> messages) {
 		int sum = 0;	
 
 		for (Message m : messages) {
@@ -203,16 +203,7 @@ public class DiningLoop implements Input {
 		String messageDelay = repeat(String.valueOf(nothing), delay+1);
 		StringBuilder sb = new StringBuilder(currentMessage);
 		
-		if (currentMessageIndex == 0) {
-			// This should never happen, since the system
-			// doesn't realize a collision has occurred until
-			// the currentMessageIndex value has already been
-			// incremented.
-			System.err.println("Trying to insert before the beginning of the string");
-			System.exit(1);
-		} else {
-			sb.insert(currentMessageIndex-1, messageDelay);
-		}
+		sb.insert(0, messageDelay);
 
 		return sb.toString();
 	}
