@@ -2,129 +2,86 @@ package server;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.ArrayList;
 
 import communication.CommunicationProtocol;
-import communication.DiningKeySet;
+import communication.KeySet;
 import communication.Message;
 
 /**
  * The ServerThread class represents
+ * @author soph
  *
  */
 public class ServerThread extends Thread {
-	private ArrayList<ClientSocketInfo> clients = null;
-	private int clientID;
 	private SharedServerInfo sharedInfo;
+	private ClientSocketInfo clientConnection;
 	
-	public ServerThread(ArrayList<ClientSocketInfo> clients, int clientID,
-			SharedServerInfo sharedInfo) {
-		this.clients = clients;
-		this.clientID = clientID;
+	public ServerThread(SharedServerInfo sharedInfo, ClientSocketInfo clientConnection) {
 		this.sharedInfo = sharedInfo;
+		
+
+		this.clientConnection = clientConnection;
 	}
 	
 	public void run() {
-		Message output = null;
-		ClientSocketInfo clientConnection = clients.get(clientID);
-		
 		/* Want to start doing message passing rounds once a decent number (3 for a start)
 		 * of clients have actually connected.  This limit can be changed, but need
 		 * to stop letting them in at some stage so that the server can calculate
 		 * key-pairs etc.
 		 */
 		try {
-			// Generate the initial set of keysets.
-			sharedInfo.generateKeySets();
-
 			while (true) {
+				// Check for new clients.
+				sharedInfo.checkForNewClients();
+		
 				// Send the keys for this round to the client.
-				sendKeys(clientConnection);
+				sendKeys();
 
 				// Start the round at this point
-				sendStartRound(clientConnection);
+				sendStartRound();
 
 				// Wait for the client to send output for
 				// the round back
-				output = clientConnection.receiveMessage();
-					
-				if (output != null) {
-					// If an output was received by the connected client
-					// add it to the shared output ArrayList, as long
-					// as it wasn't the exit command.
-					if (output.getMessage().equals(CommunicationProtocol.CLIENT_EXIT)) {
-						break;
-					} else {
-						sharedInfo.addOutput(output);
-						
-						// Clear output
-						output = null;
-					}
-				} else {
-					System.out.println("Output is null.");
-					System.exit(0);
-				}
+				getOutput();
 				
 				// Wait until all clients have send their output back
-				synchronized (sharedInfo) {
-					if (sharedInfo.getNoOfMessages() < sharedInfo.getNumberClients()) {
-						try {
-							sharedInfo.wait();
-						} catch (InterruptedException e) {/* Continue */}
-					} else {
-						sharedInfo.notifyAll();
-					}
-				}
+				sharedInfo.waitForOutputs();
 				
 				// Then send all the outputs for the round back to the client.
-				sendResults(clientConnection);
+				sendResults();
 				
 				// Wait until all clients have been send the collection of outputs.
-				synchronized (sharedInfo) {
-					sharedInfo.incrementSent();
-					if (sharedInfo.getSent() < sharedInfo.getNumberClients()) {
-						try {
-							sharedInfo.wait();
-						} catch (InterruptedException e) {/* Continue */}
-					} else {
-						sharedInfo.resetRoundMessages();
-						sharedInfo.resetSent();
-						sharedInfo.notifyAll();
-					}
-				}
+				sharedInfo.waitForOutputsToBeSent();
 			}
 			
-			Message finalMessage = new Message(CommunicationProtocol.SHUTDOWN);
-			for (ClientSocketInfo c : clients) {
-				System.err.println("Sending a shutdown message");
-				c.send(finalMessage);
-			}
-			
-			System.out.println("Sent all shutdowns...exiting");
-			
-			// Close socket connections for this client
-			clientConnection.close();
-			
-			System.exit(0);
+		} catch (SocketException e) {
+			// Client lost.
+			try {
+				abort();
+			} catch (Exception ex) {}
 		} catch (EOFException e) {
 			// Server has lost the client connection due to the
 			// client disconnecting, so don't need to do anything
 			// else
-			System.exit(0);
+			try {
+				abort();
+			} catch (Exception ex) {/* Don't care at this stage */}
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
 	}
 
-	private void sendKeys(ClientSocketInfo client) throws IOException {
+	private void sendKeys() throws IOException {
 		// Get the keyset for this round
-		DiningKeySet key = sharedInfo.getKeySet();
+		KeySet key = sharedInfo.getKeySet();
 		
 		// Send the KeySet to the client
-		client.send(key);
+		clientConnection.send(key);
 
-		Message reply = client.receiveMessage();
+		Message reply = clientConnection.receiveMessage();
 		if (reply.getMessage().equals(CommunicationProtocol.ACK)) {
 			// The keyset was received by the client correctly
 			return;
@@ -137,14 +94,35 @@ public class ServerThread extends Thread {
 		}
 	}
 	
-	private void sendResults(ClientSocketInfo client) throws IOException {
+	private void getOutput() throws IOException {
+		Message output = clientConnection.receiveMessage();
+		
+		if (output != null) {
+			// If an output was received by the connected client
+			// add it to the shared output ArrayList, as long
+			// as it wasn't the exit command.
+			if (output.getMessage().equals(CommunicationProtocol.CLIENT_EXIT)) {
+				abort();
+			} else {
+				sharedInfo.addOutput(output);
+				
+				// Clear output
+				output = null;
+			}
+		} else {
+			System.out.println("Output is null.");
+			System.exit(0);
+		}
+	}
+	
+	private void sendResults() throws IOException {
 		// Get the results for this round
 		ArrayList<Message> results = new ArrayList<Message>(sharedInfo.getCurrentRoundMessages());
 		
 		// Send the results to the client
-		client.send(results);
+		clientConnection.send(results);
 
-		Message reply = client.receiveMessage();
+		Message reply = clientConnection.receiveMessage();
 		if (reply.getMessage().equals(CommunicationProtocol.ACK)) {
 			// The results were received by the client correctly
 			return;
@@ -155,7 +133,17 @@ public class ServerThread extends Thread {
 		}
 	}
 
-	private void sendStartRound(ClientSocketInfo client) throws IOException {
-		client.send(new Message(CommunicationProtocol.START_ROUND));
+	private void sendStartRound() throws IOException {
+		clientConnection.send(new Message(CommunicationProtocol.START_ROUND));
+	}
+	
+	private void abort() throws IOException{
+		//sharedInfo.sendShutdownMessages();
+		//System.out.println("Sent all shutdowns...exiting");
+		
+		// Close socket connections for this client
+		clientConnection.close();
+		
+		sharedInfo.removeClient(clientConnection);
 	}
 }

@@ -1,10 +1,12 @@
 package server;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
-import communication.DiningKey;
-import communication.DiningKeySet;
-import communication.DiningKeyOp;
+import communication.CommunicationProtocol;
+import communication.Key;
+import communication.KeySet;
+import communication.Keyop;
 import communication.Message;
 
 /** The set of information that needs to be shared
@@ -17,15 +19,28 @@ import communication.Message;
  *
  */
 public class SharedServerInfo {
-	private int noSent = 0, numberClients, keysDistributed = 0;
+	private int noSent = 0, keysDistributed = 0, noStart = 0;
 	private ArrayList<Message> currentRoundMessages;
-	private DiningKeySet[] keysets = null;
+	private ArrayList<ClientSocketInfo> clients = new ArrayList<ClientSocketInfo>(),
+			newClients = new ArrayList<ClientSocketInfo>(),
+			clientsToRemove = new ArrayList<ClientSocketInfo>();
+	private KeySet[] keysets = null;
 	
-	public SharedServerInfo(int noOfReplies, int numberClients,
-			ArrayList<Message> currentRoundMessages) {
+	public SharedServerInfo(int noOfReplies, ArrayList<Message> currentRoundMessages) {
 		this.noSent = noOfReplies;
-		this.numberClients = numberClients;
 		this.currentRoundMessages = currentRoundMessages;
+	}
+	
+	public synchronized void incrementStart() {
+		this.noStart++;
+	}
+	
+	public synchronized void resetStart() {
+		this.noStart = 0;
+	}
+	
+	public synchronized int getStart() {
+		return this.noStart;
 	}
 	
 	public synchronized void incrementSent() {
@@ -41,7 +56,7 @@ public class SharedServerInfo {
 	}
 	
 	public synchronized int getNumberClients() {
-		return this.numberClients;
+		return this.clients.size();
 	}
 	
 	public synchronized int getNoOfMessages() {
@@ -60,39 +75,111 @@ public class SharedServerInfo {
 		this.currentRoundMessages.clear();
 	}
 	
-	public synchronized DiningKeySet getKeySet() {
-		if (keysDistributed == numberClients) {
-			generateKeySets();
-			keysDistributed = 0;
+	public synchronized void addClient(ClientSocketInfo newClient) {
+		newClients.add(newClient);
+		
+		System.out.println("Server starting thread " + clients.size());
+		new ServerThread(this, newClient).start();
+	}
+	
+	public synchronized KeySet getKeySet() {
+		if (keysets == null || keysDistributed == clients.size()) {
+			
 		}
 		
-		DiningKeySet set = keysets[keysDistributed];
+		KeySet set = keysets[keysDistributed];
 		keysDistributed++;
 		
 		return set; 
 	}
 	
-	public void generateKeySets() {
+	private void generateKeySets() {
 		// Create a set for each client
-		keysets = new DiningKeySet[numberClients];
-		for (int i=0 ; i<numberClients ; i++ ) {
-			keysets[i] = new DiningKeySet();
+		keysets = new KeySet[clients.size()];
+		for (int i=0 ; i<clients.size() ; i++ ) {
+			keysets[i] = new KeySet();
 		}
 		
 		// Populate each set
-		for (int i=0 ; i<numberClients-1 ; i++) {
-			for (int j=i+1 ; j<numberClients ; j++) {
+		for (int i=0 ; i<clients.size()-1 ; i++) {
+			for (int j=i+1 ; j<clients.size() ; j++) {
 				// Create the key
-				DiningKey k = DiningKey.generateRandomKey();
+				Key k = Key.generateRandomKey();
 				
 				// Set the keyops
-				DiningKey kp = new DiningKey(k.getKey(), DiningKeyOp.ADD),
-					kn = new DiningKey(k.getKey(), DiningKeyOp.SUBTRACT);
+				Key kp = new Key(k.getKey(), Keyop.ADD),
+					kn = new Key(k.getKey(), Keyop.SUBTRACT);
 				
 				// Add the keys to the sets
 				keysets[i].addKey(kp);
 				keysets[j].addKey(kn);
 			}
 		}
+	}
+
+	public synchronized void waitForOutputs() {
+		if (getNoOfMessages() < getNumberClients()) {
+			try {
+				System.out.println("wait outputs"); System.out.flush();
+				wait();
+			} catch (InterruptedException e) {/* Continue */}
+		} else {
+			System.out.println("done outputs"); System.out.flush();
+			notifyAll();
+		}
+	}
+
+	public synchronized void waitForOutputsToBeSent() {
+		incrementSent();
+		if (getSent() < getNumberClients()) {
+			try {
+				System.out.println("wait outputs sent"); System.out.flush();
+				wait();
+			} catch (InterruptedException e) {/* Continue */}
+		} else {
+			resetRoundMessages();
+			resetSent();
+			System.out.println("done outputs sent"); System.out.flush();
+			notifyAll();
+		}
+	}
+
+	public synchronized void checkForNewClients() {
+		incrementStart();
+		if (getStart() < getNumberClients() + newClients.size()) {
+			try {
+				wait();
+				
+			} catch (InterruptedException e) {/* Continue */}
+		} else {
+			for (ClientSocketInfo newClient : newClients) {
+				clients.add(newClient);
+			}
+			newClients.clear();
+			resetStart();
+			
+			for (ClientSocketInfo deadClient : clientsToRemove) {
+				clients.remove(deadClient);
+			}
+			clientsToRemove.clear();
+			
+			// Generate the keys for this round.
+			generateKeySets();
+			keysDistributed = 0;
+			System.out.println("done start"); System.out.flush();
+			notifyAll();
+		}
+	}
+	
+	public synchronized void sendShutdownMessages() throws IOException{
+		Message finalMessage = new Message(CommunicationProtocol.SHUTDOWN);
+		for (ClientSocketInfo c : clients) {
+			System.err.println("Sending a shutdown message");
+			c.send(finalMessage);
+		}
+	}
+
+	public synchronized void removeClient(ClientSocketInfo clientConnection) {
+		this.clientsToRemove.add(clientConnection);
 	}
 }
