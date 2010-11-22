@@ -23,7 +23,7 @@ import communication.Message;
  *
  */
 public class DiningLoop implements Input {
-	private final static int MAX_CHAR = '\uffff';
+	private final static int MAX_CHAR = '\uffff', MAX_WAIT = 10;
 	
 	private final ClientConnection connection;
 	private Output guiRef = null;
@@ -59,7 +59,7 @@ public class DiningLoop implements Input {
 		Message received;
 		ArrayList<Message> roundResults;
 		boolean inMessageFlag = false;
-		StringBuilder outputMessage = new StringBuilder();
+		String outputMessage = new String();
 		
 		while (true) {
 			try {
@@ -96,11 +96,11 @@ public class DiningLoop implements Input {
 						// Add the result to the output array
 						// for printing once the whole message
 						// is received
-						outputMessage.append(r);
+						outputMessage = outputMessage + String.valueOf(r);
 						inMessageFlag = true;
 					} else if ( inMessageFlag ) {
 						guiRef.outputString(outputMessage.toString() + "\n");
-						outputMessage = new StringBuilder();
+						outputMessage = "";
 						inMessageFlag = false;
 					}
 				} else if (received.getMessage().equals(CommunicationProtocol.SHUTDOWN)) {
@@ -128,7 +128,7 @@ public class DiningLoop implements Input {
 	 * counter starting.  if isCollision already true
 	 */
 	private char collate(ArrayList<Message> messages,
-			StringBuilder outputMessage) {
+			String outputMessage) {
 		int sum = 0;	
 
 		for (Message m : messages) {
@@ -142,8 +142,9 @@ public class DiningLoop implements Input {
 			/* Adds a random delay to the buffer that
 			 * collided, so that the collision can be resolved.
 			 */
+			// TODO: put currentMessage set inside addDelay func
 			currentMessage = addDelayToBuffer();
-			outputMessage = new StringBuilder();
+			outputMessage = new String();
 			
 			// Also don't want to print the collision,
 			// since it's usually a non-alphanumeric char
@@ -203,13 +204,14 @@ public class DiningLoop implements Input {
 		SecureRandom rand = new SecureRandom();
 		
 		char nothing = (char) 0;
-		// This max was just a random choice.
-		// Just didn't want to include gigantic delays
-		int delay = rand.nextInt(currentMessage.length());
-		String messageDelay = repeat(String.valueOf(nothing), delay+1);
+		int delay = rand.nextInt(MAX_WAIT);
+		System.out.println("delay size: " + delay);
+		String messageDelay = repeat(String.valueOf(nothing), delay);
 		StringBuilder sb = new StringBuilder(currentMessage);
 		
 		sb.insert(0, messageDelay);
+		// Reset the counter used to send message
+		currentMessageIndex = 0;
 
 		return sb.toString();
 	}
