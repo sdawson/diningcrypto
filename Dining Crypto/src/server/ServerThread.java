@@ -3,6 +3,7 @@ package server;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.SocketException;
+import java.security.Key;
 import java.util.ArrayList;
 
 import communication.CommunicationProtocol;
@@ -32,6 +33,9 @@ public class ServerThread extends Thread {
 		 * key-pairs etc.
 		 */
 		try {
+			// Send the public key to the client.
+			sendKey();
+			
 			while (true) {
 				// Check for new clients.
 				sharedInfo.checkForNewClients();
@@ -72,6 +76,13 @@ public class ServerThread extends Thread {
 			e.printStackTrace();
 			System.exit(1);
 		}
+	}
+
+	private void sendKey() throws IOException {
+		Key publicKey = sharedInfo.getPublicKey();
+		
+		clientConnection.send(publicKey);
+		
 	}
 
 	private void sendKeys() throws IOException {

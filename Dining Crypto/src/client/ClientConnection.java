@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.Key;
 import java.util.ArrayList;
 
 import communication.DiningKeySet;
@@ -93,6 +94,13 @@ public class ClientConnection {
 
 		keyset = (DiningKeySet) in.readObject();
 		return keyset;
+	}
+	
+	public Key receiveKey() throws IOException, ClassNotFoundException {
+		Key key = null;
+		
+		key = (Key)in.readObject();
+		return key;
 	}
 	
 	@SuppressWarnings("unchecked")

@@ -5,6 +5,7 @@ import interfaces.Output;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.security.Key;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 
@@ -60,6 +61,18 @@ public class DiningLoop implements Input {
 		ArrayList<Message> roundResults;
 		boolean inMessageFlag = false;
 		String outputMessage = new String();
+		
+		// Receive the public key from the server.
+		Key publicKey = null;
+		try {
+			publicKey = connection.receiveKey();
+		} catch (IOException e1) {
+			System.out.println("Failed to acquire server's public key. Exiting.");
+			System.exit(0);
+		} catch (ClassNotFoundException e1) {
+			System.out.println("Failed to acquire server's public key. Exiting.");
+			System.exit(0);
+		}
 		
 		while (true) {
 			try {

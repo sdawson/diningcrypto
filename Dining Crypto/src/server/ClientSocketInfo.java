@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.security.Key;
 import java.util.ArrayList;
 
 import communication.DiningKeySet;
@@ -68,7 +69,21 @@ public class ClientSocketInfo {
 	public void send(DiningKeySet keys) throws IOException {
 		out.writeObject(keys);
 	}
+	
+	/**
+	 * Send an encryption key to the connected client.
+	 * @param key The key to be send.
+	 * @throws IOException
+	 */
+	public void send(Key key) throws IOException {
+		out.writeObject(key);
+	}
 
+	/**
+	 * Send the collection of results to the client.
+	 * @param currentRoundMessages The collection of results.
+	 * @throws IOException
+	 */
 	public void send(ArrayList<Message> currentRoundMessages) throws IOException {
 		out.writeObject(currentRoundMessages);
 	}

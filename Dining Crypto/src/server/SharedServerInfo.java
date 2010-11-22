@@ -1,6 +1,8 @@
 package server;
 
 import java.io.IOException;
+import java.security.Key;
+import java.security.KeyPair;
 import java.util.ArrayList;
 
 import communication.CommunicationProtocol;
@@ -8,6 +10,8 @@ import communication.DiningKey;
 import communication.DiningKeyOp;
 import communication.DiningKeySet;
 import communication.Message;
+
+import crypto.Encryption;
 
 /** The set of information that needs to be shared
  * by all the threads running on the server.  All
@@ -20,15 +24,18 @@ import communication.Message;
  */
 public class SharedServerInfo {
 	private int noSent = 0, keysDistributed = 0, noStart = 0;
-	private ArrayList<Message> currentRoundMessages;
+	private ArrayList<Message> currentRoundMessages = new ArrayList<Message>();
 	private ArrayList<ClientSocketInfo> clients = new ArrayList<ClientSocketInfo>(),
 			newClients = new ArrayList<ClientSocketInfo>(),
 			clientsToRemove = new ArrayList<ClientSocketInfo>();
 	private DiningKeySet[] keysets = null;
+	private Key publicKey, privateKey;
 	
-	public SharedServerInfo(int noOfReplies, ArrayList<Message> currentRoundMessages) {
-		this.noSent = noOfReplies;
-		this.currentRoundMessages = currentRoundMessages;
+	public SharedServerInfo() {
+		// Generate the keys for encryption
+		KeyPair keys = Encryption.generateRSAKeys();
+		this.publicKey = keys.getPublic();
+		this.privateKey = keys.getPrivate();
 	}
 	
 	public synchronized void incrementStart() {
@@ -185,5 +192,13 @@ public class SharedServerInfo {
 
 	public synchronized void removeClient(ClientSocketInfo clientConnection) {
 		this.clientsToRemove.add(clientConnection);
+	}
+
+	public Key getPublicKey() {
+		return publicKey;
+	}
+
+	public Key getPrivateKey() {
+		return privateKey;
 	}
 }

@@ -1,9 +1,6 @@
 package server;
 
 import java.io.IOException;
-import java.util.ArrayList;
-
-import communication.Message;
 
 /**
  * The main server class.  This class simply
@@ -28,17 +25,11 @@ public class Server {
 		
 		System.out.println("Server initialized on port " + PORT);
 		
-		int noOfReplies = 0;
-		SharedServerInfo serverInfo = new SharedServerInfo(noOfReplies, new ArrayList<Message>());
+		SharedServerInfo serverInfo = new SharedServerInfo();
 		
-		/* Only accept MAXCLIENTS clients */
 		while (true) {
 			serverInfo.addClient(connection.acceptConnection());
 			System.out.println("Client connected.");
 		}
-		
-		/*while (true) {
-			serverInfo.addClient(connection.acceptConnection());
-		}*/
 	}
 }
