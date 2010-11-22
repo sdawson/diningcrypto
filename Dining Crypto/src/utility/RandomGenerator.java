@@ -9,10 +9,7 @@ public class RandomGenerator {
 		byte[] b = new byte[4];
 		rand.nextBytes(b);
 		
-		return  (new Byte(b[0])).intValue() +
-				(new Byte(b[1])).intValue()*Byte.MAX_VALUE +
-				(new Byte(b[1])).intValue()*Byte.MAX_VALUE*Byte.MAX_VALUE +
-				(new Byte(b[1])).intValue()*Byte.MAX_VALUE*Byte.MAX_VALUE*Byte.MAX_VALUE;
+		return  ByteUtil.bytesToInt(b);
 	}
 
 }
