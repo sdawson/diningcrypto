@@ -60,7 +60,7 @@ public class DiningLoop implements Input {
 	public void run() {
 		Message received;
 		ArrayList<Message> roundResults;
-		boolean inMessageFlag = false;
+		boolean inMessage = false;
 		String outputMessage = new String();
 		
 		// Receive the public key from the server.
@@ -78,6 +78,14 @@ public class DiningLoop implements Input {
 				
 				received = connection.receiveMessage();
 				if (received.getMessage().equals(CommunicationProtocol.START_ROUND)) {
+					if(inMessage) {
+						try {
+							// No message is being sent so slow down the loop.
+							Thread.sleep(200);
+						} catch (InterruptedException e) {/* Continue */}
+					}
+					
+					
 					// Transmit the next character, unless a collision
 					// has occurred.  In the case of a collision wait
 					// until a random number of rounds has passed before
@@ -102,11 +110,11 @@ public class DiningLoop implements Input {
 						// for printing once the whole message
 						// is received
 						outputMessage = outputMessage + String.valueOf(r);
-						inMessageFlag = true;
-					} else if ( inMessageFlag ) {
+						inMessage = true;
+					} else if ( inMessage ) {
 						guiRef.outputString(outputMessage.toString() + "\n");
 						outputMessage = "";
-						inMessageFlag = false;
+						inMessage = false;
 					}
 				} else if (received.getMessage().equals(CommunicationProtocol.SHUTDOWN)) {
 					break;
