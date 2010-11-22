@@ -42,7 +42,7 @@ public class DiningKeySet implements Serializable {
 		if (keys != null) {
 			int sum = 0;
 			for (DiningKey k : keys) {
-				if ( k.getKeyop()==DiningKeyOp.ADD)
+				if ( k.getKeyOp()==DiningKeyOp.ADD)
 					sum += k.getKey();
 				else
 					sum -= k.getKey();

@@ -23,11 +23,16 @@ public class DiningKey implements Serializable {
 		this.op = op;
 	}
 	
+	public DiningKey(DiningKey dk) {
+		this.key = dk.getKey();
+		this.op = dk.getKeyOp();
+	}
+	
 	public int getKey() {
 		return this.key;
 	}
 	
-	public DiningKeyOp getKeyop() {
+	public DiningKeyOp getKeyOp() {
 		return this.op;
 	}
 	
