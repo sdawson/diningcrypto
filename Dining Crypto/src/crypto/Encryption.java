@@ -33,7 +33,7 @@ public class Encryption {
 			System.out.println("Failed to generate RSA keys. Exiting.");
 			System.exit(1);
 		}
-		kpg.initialize(2048);
+		kpg.initialize(1024);
 		return kpg.genKeyPair();
 	}
 	
