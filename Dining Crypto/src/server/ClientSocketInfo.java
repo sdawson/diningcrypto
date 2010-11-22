@@ -5,10 +5,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.security.Key;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
 
 import communication.DiningKeySet;
 import communication.Message;
+
+import crypto.Encryption;
 
 /**
  * The ClientSocketInfo class contains all
@@ -22,17 +26,23 @@ public class ClientSocketInfo {
 	private Socket clientSocket = null;
 	private ObjectInputStream in = null;
 	private ObjectOutputStream out = null;
+	private PublicKey encryptionKey;
+	private PrivateKey decryptionKey;
 
 	public ClientSocketInfo(Socket clientSocket) {
 		this.clientSocket = clientSocket;
 		try {
 			out = new ObjectOutputStream(this.clientSocket.getOutputStream());
 			in = new ObjectInputStream(this.clientSocket.getInputStream());
-			System.out.println("in/out streams have been set up");
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
+	}
+	
+	public void setKeys(PublicKey encryptionKey, PrivateKey decryptionKey) {
+		this.encryptionKey = encryptionKey;
+		this.decryptionKey = decryptionKey;
 	}
 
 	/**
@@ -44,7 +54,7 @@ public class ClientSocketInfo {
 		Message newMessage = null;
 
 		try {
-			newMessage = (Message) in.readObject();
+			newMessage = Encryption.decrypt((Message) in.readObject(), decryptionKey);
 		} catch (ClassNotFoundException e) {
 			return null;
 		}
@@ -58,7 +68,7 @@ public class ClientSocketInfo {
 	 * @throws IOException
 	 */
 	public void send(Message message) throws IOException {
-		out.writeObject(message);
+		out.writeObject(Encryption.encrypt(message, encryptionKey));
 	}
 
 	/**
@@ -67,7 +77,7 @@ public class ClientSocketInfo {
 	 * @throws IOException
 	 */
 	public void send(DiningKeySet keys) throws IOException {
-		out.writeObject(keys);
+		out.writeObject(Encryption.encrypt(keys, encryptionKey));
 	}
 	
 	/**
@@ -84,8 +94,13 @@ public class ClientSocketInfo {
 	 * @param currentRoundMessages The collection of results.
 	 * @throws IOException
 	 */
+	@SuppressWarnings("unchecked")
 	public void send(ArrayList<Message> currentRoundMessages) throws IOException {
-		out.writeObject(currentRoundMessages);
+		ArrayList<Message> cipher = (ArrayList<Message>) currentRoundMessages.clone();
+		for (int i=0 ; i<cipher.size() ; i++) {
+			cipher.set(i, Encryption.encrypt(cipher.get(i), encryptionKey));
+		}
+		out.writeObject(cipher);
 	}
 
 	/**

@@ -21,8 +21,6 @@ public class ServerThread extends Thread {
 	
 	public ServerThread(SharedServerInfo sharedInfo, ClientSocketInfo clientConnection) {
 		this.sharedInfo = sharedInfo;
-		
-
 		this.clientConnection = clientConnection;
 	}
 	
@@ -97,9 +95,6 @@ public class ServerThread extends Thread {
 			// The keyset was received by the client correctly
 			return;
 		} else {
-			// The keyset was not received correctly (needs to
-			// be resent)
-			
 			System.err.println("Failed to send keys to the client");
 			System.exit(0);
 		}
@@ -121,7 +116,7 @@ public class ServerThread extends Thread {
 				output = null;
 			}
 		} else {
-			System.out.println("Output is null.");
+			System.out.println("Output is null. Exiting.");
 			System.exit(0);
 		}
 	}

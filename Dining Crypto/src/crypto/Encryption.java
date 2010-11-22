@@ -1,10 +1,18 @@
 package crypto;
 
 import java.security.InvalidKeyException;
-import java.security.Key;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.RSAPrivateKeySpec;
+import java.security.spec.RSAPublicKeySpec;
+import java.util.ArrayList;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -24,6 +32,8 @@ import communication.Message;
  *
  */
 public class Encryption {
+	private final static int BLOCK_SIZE = 128, DATA_SIZE = 117;
+	
 	public static KeyPair generateRSAKeys() {
 		KeyPairGenerator kpg = null;
 		try {
@@ -37,12 +47,71 @@ public class Encryption {
 		return kpg.genKeyPair();
 	}
 	
-	/************** ENCRYPTION **************/
-	public static Message encrypt(Message m, Key k) {
-		return new Message(encrypt(m.getMessage(), k));
+	public static PrivateKey publicToPrivate(RSAPublicKey pub) {
+		PrivateKey pri = null;
+		try {
+			RSAPrivateKeySpec keySpec = new RSAPrivateKeySpec(pub.getModulus(), pub.getPublicExponent());
+			KeyFactory fact = KeyFactory.getInstance("RSA");
+			pri = fact.generatePrivate(keySpec);
+		} catch (NoSuchAlgorithmException e) {
+			System.out.println("Error generating key. Exiting");
+			e.printStackTrace();
+			System.exit(0);
+		} catch (InvalidKeySpecException e) {
+			System.out.println("Error generating key. Exiting");
+			e.printStackTrace();
+			System.exit(0);
+		}
+		
+		return pri;
 	}
 	
-	public static DiningKeySet encrypt(DiningKeySet plainKS, Key k) {
+	public static PublicKey privateToPublic(RSAPrivateKey pri) {
+		PublicKey pub = null;
+		try {
+			RSAPublicKeySpec keySpec = new RSAPublicKeySpec(pri.getModulus(), pri.getPrivateExponent());
+			KeyFactory fact = KeyFactory.getInstance("RSA");
+			pub = fact.generatePublic(keySpec);
+		} catch (NoSuchAlgorithmException e) {
+			System.out.println("Error generating key. Exiting");
+			e.printStackTrace();
+			System.exit(0);
+		} catch (InvalidKeySpecException e) {
+			System.out.println("Error generating key. Exiting");
+			e.printStackTrace();
+			System.exit(0);
+		}
+		
+		return pub;
+	}
+	
+	private static byte[] dealWithBlocks(Cipher cipher, byte[] data, int blockSize) throws IllegalBlockSizeException, BadPaddingException {
+		ArrayList<Byte> list = new ArrayList<Byte>();
+		
+		byte[] block = new byte[blockSize];
+		for (int i=0 ; i<data.length ; i+=block.length) {
+			int remaining = data.length - i;
+			if (block.length < remaining) {
+				System.arraycopy(data, i, block, 0, block.length);
+			} else {
+				block = new byte[remaining];
+				System.arraycopy(data, i, block, 0, remaining);
+			}
+			
+			
+			for (byte b : cipher.doFinal(block)) {
+				list.add(new Byte(b));
+			}
+		}
+		return ByteUtil.arrayListToArray(list);
+	}
+	
+	/************** ENCRYPTION **************/
+	public static Message encrypt(Message m, PublicKey k) {
+		return new Message(encrypt(m.getMessageAsBytes(), k));
+	}
+	
+	public static DiningKeySet encrypt(DiningKeySet plainKS, PublicKey k) {
 		DiningKeySet cipherKS = new DiningKeySet();
 		
 		for (DiningKey dk : plainKS.getKeySet()) {
@@ -52,45 +121,47 @@ public class Encryption {
 		return cipherKS;
 	}
 	
-	public static DiningKey encrypt(DiningKey dk, Key k) {
-		return new DiningKey(encrypt(dk.getKey(), k), dk.getKeyOp());}
-	
-	public static int encrypt(int i, Key k) {
-		return ByteUtil.bytesToInt(encrypt(ByteUtil.intToBytes(i), k));
+	public static DiningKey encrypt(DiningKey dk, PublicKey k) {
+		return new DiningKey(encrypt(dk.getKeyAsBytes(), k), dk.getKeyOp());
 	}
 	
-	public static String encrypt(String str, Key k) {
-		return new String(encrypt(str.getBytes(), k));
-	}
-	
-	public static byte[] encrypt(byte[] plainData, Key k) {
+	public static byte[] encrypt(byte[] plainData, PublicKey k) {
 		byte[] cipherData = null;
 		try {
 			Cipher cipher = Cipher.getInstance("RSA");
 			cipher.init(Cipher.ENCRYPT_MODE, k);
-
-			cipherData = cipher.doFinal(plainData);
+			
+			if (plainData.length < DATA_SIZE) {
+				cipherData = cipher.doFinal(plainData);
+			} else {
+				cipherData = dealWithBlocks(cipher, plainData, DATA_SIZE);
+			}
 		} catch (NoSuchPaddingException e) {
 			System.out.println("Error during encryption.");
+			e.printStackTrace();
 		} catch (BadPaddingException e) {
 			System.out.println("Error during encryption.");
+			e.printStackTrace();
 		} catch (IllegalBlockSizeException e) {
 			System.out.println("Error during encryption.");
+			e.printStackTrace();
 		} catch (InvalidKeyException e) {
 			System.out.println("Error during encryption.");
+			e.printStackTrace();
 		} catch (NoSuchAlgorithmException e) {
 			System.out.println("Error during encryption.");
+			e.printStackTrace();
 		}
 		
 		return cipherData;
 	}
 	
 	/************** DECRYPTION **************/
-	public static Message decrypt(Message m, Key k) {
-		return new Message(encrypt(m.getMessage(), k));
+	public static Message decrypt(Message m, PrivateKey k) {
+		return new Message(decrypt(m.getMessageAsBytes(), k));
 	}
 	
-	public static DiningKeySet decrypt(DiningKeySet cipherKS, Key k) {
+	public static DiningKeySet decrypt(DiningKeySet cipherKS, PrivateKey k) {
 		DiningKeySet plainKS = new DiningKeySet();
 		
 		for (DiningKey dk : cipherKS.getKeySet()) {
@@ -100,34 +171,36 @@ public class Encryption {
 		return plainKS;
 	}
 	
-	public static DiningKey decrypt(DiningKey dk, Key k) {
-		return new DiningKey(decrypt(dk.getKey(), k), dk.getKeyOp());}
-	
-	public static int decrypt(int i, Key k) {
-		return ByteUtil.bytesToInt(decrypt(ByteUtil.intToBytes(i), k));
+	public static DiningKey decrypt(DiningKey dk, PrivateKey k) {
+		return new DiningKey(decrypt(dk.getKeyAsBytes(), k), dk.getKeyOp());
 	}
 	
-	public static String decrypt(String str, Key k) {
-		return new String(decrypt(str.getBytes(), k));
-	}
-	
-	public static byte[] decrypt(byte[] cipherData, Key k) {
+	public static byte[] decrypt(byte[] cipherData, PrivateKey k) {
 		byte[] plainData = null;
 		try {
 			Cipher cipher = Cipher.getInstance("RSA");
 			cipher.init(Cipher.DECRYPT_MODE, k);
 
-			plainData = cipher.doFinal(cipherData);
+			if (cipherData.length < BLOCK_SIZE) {
+				plainData = cipher.doFinal(cipherData);
+			} else {
+				plainData = dealWithBlocks(cipher, cipherData, BLOCK_SIZE);
+			}
 		} catch (NoSuchPaddingException e) {
 			System.out.println("Error during decryption.");
+			e.printStackTrace();
 		} catch (BadPaddingException e) {
 			System.out.println("Error during decryption.");
+			e.printStackTrace();
 		} catch (IllegalBlockSizeException e) {
 			System.out.println("Error during decryption.");
+			e.printStackTrace();
 		} catch (InvalidKeyException e) {
 			System.out.println("Error during decryption.");
+			e.printStackTrace();
 		} catch (NoSuchAlgorithmException e) {
 			System.out.println("Error during decryption.");
+			e.printStackTrace();
 		}
 		
 		return plainData;

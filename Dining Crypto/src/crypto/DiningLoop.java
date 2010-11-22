@@ -5,8 +5,9 @@ import interfaces.Output;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.security.Key;
+import java.net.SocketException;
 import java.security.SecureRandom;
+import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 
 import utility.StrBuffer;
@@ -24,7 +25,7 @@ import communication.Message;
  *
  */
 public class DiningLoop implements Input {
-	private final static int MAX_CHAR = '\uffff', MAX_WAIT = 10;
+	private final static int MAX_WAIT = 10;
 	
 	private final ClientConnection connection;
 	private Output guiRef = null;
@@ -63,16 +64,7 @@ public class DiningLoop implements Input {
 		String outputMessage = new String();
 		
 		// Receive the public key from the server.
-		Key publicKey = null;
-		try {
-			publicKey = connection.receiveKey();
-		} catch (IOException e1) {
-			System.out.println("Failed to acquire server's public key. Exiting.");
-			System.exit(0);
-		} catch (ClassNotFoundException e1) {
-			System.out.println("Failed to acquire server's public key. Exiting.");
-			System.exit(0);
-		}
+		getKey();
 		
 		while (true) {
 			try {
@@ -129,6 +121,9 @@ public class DiningLoop implements Input {
 				 */
 				
 				// TODO: do something about this exception
+			} catch (SocketException e) {
+				System.out.println("Lost connection to the server. Exiting.");
+				System.exit(1);
 			} catch (IOException e) {
 				// TODO: do something about this exception
 				e.printStackTrace();
@@ -150,7 +145,7 @@ public class DiningLoop implements Input {
 		
 		if (sum==0) {
 			// no message has been transmitted
-		} else if (sum > 2*MAX_CHAR) {
+		} else if (sum > 2*Character.MAX_VALUE) {
 			// There is a collision.
 			/* Adds a random delay to the buffer that
 			 * collided, so that the collision can be resolved.
@@ -163,7 +158,7 @@ public class DiningLoop implements Input {
 			// since it's usually a non-alphanumeric char
 			sum = 0;
 		} else {
-			sum -= MAX_CHAR;
+			sum -= Character.MAX_VALUE;
 		}
 
 		return (char)sum;
@@ -180,7 +175,7 @@ public class DiningLoop implements Input {
 				 */
 				return null;
 		}
-		
+
 		connection.send(new Message(CommunicationProtocol.ACK));
 		
 		return keys;
@@ -245,7 +240,7 @@ public class DiningLoop implements Input {
 		int cint = c;
 		if (c!= 0) {
 			// Add \uffff (max unicode value to the output so we can detect collisions
-			cint += MAX_CHAR;
+			cint += Character.MAX_VALUE;
 		}
 		
 		int output = keys.sum() + cint;
@@ -253,9 +248,23 @@ public class DiningLoop implements Input {
 		connection.send(new Message("" +  output));
 	}
 
+	public void getKey() {
+			RSAPublicKey publicKey = null;
+			try {
+				publicKey = connection.receiveKey();
+			} catch (IOException e1) {
+				System.out.println("Failed to acquire server's public key. Exiting.");
+				System.exit(0);
+			} catch (ClassNotFoundException e1) {
+				System.out.println("Failed to acquire server's public key. Exiting.");
+				System.exit(0);
+			}
+			connection.setKeys(publicKey, Encryption.publicToPrivate(publicKey));
+	}
+	
+	
 	@Override
 	public void inputString(String str) {
 		inputBuf.add(str);
-		System.out.println("Message " + str + " added to buffer.");
 	}
 }

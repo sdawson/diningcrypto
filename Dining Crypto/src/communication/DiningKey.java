@@ -2,6 +2,7 @@ package communication;
 
 import java.io.Serializable;
 
+import utility.ByteUtil;
 import utility.RandomGenerator;
 
 /**
@@ -15,21 +16,38 @@ import utility.RandomGenerator;
 public class DiningKey implements Serializable {
 	private static final long serialVersionUID = -709609931265527197L;
 	
-	private final int key;
+	private byte[] key = null;
 	private final DiningKeyOp op;
 	
 	public DiningKey(int key, DiningKeyOp op) {
+		this.setKey(key);
+		this.op = op;
+	}
+	
+	public DiningKey(byte[] key, DiningKeyOp op) {
 		this.key = key;
 		this.op = op;
 	}
 	
 	public DiningKey(DiningKey dk) {
-		this.key = dk.getKey();
+		this.setKey(dk.getKey());
 		this.op = dk.getKeyOp();
 	}
 	
 	public int getKey() {
+		return ByteUtil.bytesToInt(this.key);
+	}
+	
+	public void setKey(int key) {
+		this.key = ByteUtil.intToBytes(key);
+	}
+	
+	public byte[] getKeyAsBytes() {
 		return this.key;
+	}
+	
+	public void setKeyAsBytes(byte[] key) {
+		this.key = key;
 	}
 	
 	public DiningKeyOp getKeyOp() {
@@ -44,7 +62,7 @@ public class DiningKey implements Serializable {
 	}
 	
 	public String toString() {
-		String str = "(" + key + ",";
+		String str = "(" + getKey() + ",";
 		if (op == DiningKeyOp.ADD)
 			str = str + "+";
 		else

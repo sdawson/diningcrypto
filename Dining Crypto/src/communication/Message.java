@@ -13,13 +13,25 @@ import java.io.Serializable;
  */
 public class Message implements Serializable {
 	private static final long serialVersionUID = -4317983621836587347L;
-	private String message;
+	private byte[] message;
 
 	public Message(String message) {
-		this.message = message;
+		this.message = message.getBytes();
 	}
 
+	public Message(byte[] message) {
+		this.message = message;
+	}
+	
 	public String getMessage() {
+		return new String(this.message);
+	}
+	
+	public byte[] getMessageAsBytes() {
 		return this.message;
+	}
+	
+	public void setMessageAsBytes(byte[] bytes) {
+		this.message = bytes;
 	}
 }

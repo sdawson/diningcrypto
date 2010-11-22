@@ -1,8 +1,9 @@
 package server;
 
 import java.io.IOException;
-import java.security.Key;
 import java.security.KeyPair;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 
 import communication.CommunicationProtocol;
@@ -29,13 +30,15 @@ public class SharedServerInfo {
 			newClients = new ArrayList<ClientSocketInfo>(),
 			clientsToRemove = new ArrayList<ClientSocketInfo>();
 	private DiningKeySet[] keysets = null;
-	private Key publicKey, privateKey;
+	private RSAPublicKey publicKey;
+	private RSAPrivateKey privateKey;
 	
 	public SharedServerInfo() {
 		// Generate the keys for encryption
 		KeyPair keys = Encryption.generateRSAKeys();
-		this.publicKey = keys.getPublic();
-		this.privateKey = keys.getPrivate();
+	
+		this.publicKey = (RSAPublicKey)keys.getPublic();
+		this.privateKey = (RSAPrivateKey)keys.getPrivate();
 	}
 	
 	public synchronized void incrementStart() {
@@ -84,8 +87,10 @@ public class SharedServerInfo {
 	
 	public synchronized void addClient(ClientSocketInfo newClient) {
 		newClients.add(newClient);
+		newClient.setKeys(Encryption.privateToPublic(getPrivateKey()),
+				getPrivateKey());
 		
-		System.out.println("Server starting thread " + clients.size());
+		System.out.println("Server starting client thread " + clients.size());
 		new ServerThread(this, newClient).start();
 	}
 	
@@ -101,7 +106,6 @@ public class SharedServerInfo {
 	}
 	
 	private void generateKeySets() {
-		System.out.println("Generating keys " + clients.size()); System.out.flush();
 		// Create a set for each client
 		keysets = new DiningKeySet[clients.size()];
 		for (int i=0 ; i<clients.size() ; i++ ) {
@@ -128,11 +132,9 @@ public class SharedServerInfo {
 	public synchronized void waitForOutputs() {
 		if (getNoOfMessages() < getNumberClients()) {
 			try {
-				System.out.println("wait outputs"); System.out.flush();
 				wait();
 			} catch (InterruptedException e) {/* Continue */}
 		} else {
-			System.out.println("done outputs"); System.out.flush();
 			notifyAll();
 		}
 	}
@@ -141,13 +143,11 @@ public class SharedServerInfo {
 		incrementSent();
 		if (getSent() < getNumberClients()) {
 			try {
-				System.out.println("wait outputs sent"); System.out.flush();
 				wait();
 			} catch (InterruptedException e) {/* Continue */}
 		} else {
 			resetRoundMessages();
 			resetSent();
-			System.out.println("done outputs sent"); System.out.flush();
 			notifyAll();
 		}
 	}
@@ -175,7 +175,6 @@ public class SharedServerInfo {
 			// Generate the keys for this round.
 			generateKeySets();
 			keysDistributed = 0;
-			System.out.println("done start"); System.out.flush();
 
 			resetStart();
 			notifyAll();
@@ -194,11 +193,11 @@ public class SharedServerInfo {
 		this.clientsToRemove.add(clientConnection);
 	}
 
-	public Key getPublicKey() {
+	public RSAPublicKey getPublicKey() {
 		return publicKey;
 	}
 
-	public Key getPrivateKey() {
+	public RSAPrivateKey getPrivateKey() {
 		return privateKey;
 	}
 }

@@ -6,11 +6,15 @@ import java.io.ObjectOutputStream;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.security.Key;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 
 import communication.DiningKeySet;
 import communication.Message;
+
+import crypto.Encryption;
 
 /**
  * An encapsulation of all client-side communication with
@@ -26,6 +30,8 @@ public class ClientConnection {
 	private String serverAddress;
 	private int serverPort;
 	private Socket socket = null;
+	private PublicKey encryptionKey;
+	private PrivateKey decryptionKey;
 	ObjectInputStream in = null;
 	ObjectOutputStream out = null;
 	
@@ -34,6 +40,11 @@ public class ClientConnection {
 		this.serverPort = serverPort;
 	}
 
+	public void setKeys(PublicKey encryptionKey, PrivateKey decryptionKey) {
+		this.encryptionKey = encryptionKey;
+		this.decryptionKey = decryptionKey;
+	}
+	
 	/**
 	 * Connects to the server specified during the creation
 	 * of the ClientConnection object.
@@ -41,11 +52,9 @@ public class ClientConnection {
 	public String connect() {
 		try {
 			socket = new Socket(serverAddress, serverPort);
-			System.out.println("pre client stream collection");
 			// Output stream creation goes first to avoid blocking
 			out = new ObjectOutputStream(socket.getOutputStream());
 			in = new ObjectInputStream(socket.getInputStream());
-			System.out.println("post client stream collection");
 		} catch (UnknownHostException e) {
 			return new String("Unknown host");
 		} catch (ConnectException e) {
@@ -64,7 +73,7 @@ public class ClientConnection {
 	 * @throws IOException
 	 */
 	public void send(Message message) throws IOException {
-		out.writeObject(message);
+		out.writeObject(Encryption.encrypt(message, encryptionKey));
 	}
 
 	/**
@@ -75,8 +84,7 @@ public class ClientConnection {
 	public Message receiveMessage() throws IOException {
 		Message newMessage = null;
 		try {
-			newMessage = (Message) in.readObject();
-			//System.out.println("returns: " + newMessage.getMessage());
+			newMessage = Encryption.decrypt((Message) in.readObject(), decryptionKey);
 		} catch (ClassNotFoundException e) {
 			return null;
 		}
@@ -90,17 +98,17 @@ public class ClientConnection {
 	 * @throws ClassNotFoundException
 	 */
 	public DiningKeySet receiveKeySet() throws IOException, ClassNotFoundException {
-		DiningKeySet keyset = null;
-
-		keyset = (DiningKeySet) in.readObject();
-		return keyset;
+		return Encryption.decrypt((DiningKeySet) in.readObject(), decryptionKey);
 	}
 	
-	public Key receiveKey() throws IOException, ClassNotFoundException {
-		Key key = null;
-		
-		key = (Key)in.readObject();
-		return key;
+	/**
+	 * Receives an encryption key from the server.
+	 * @return
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
+	public RSAPublicKey receiveKey() throws IOException, ClassNotFoundException {
+		return (RSAPublicKey)in.readObject();
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -109,6 +117,9 @@ public class ClientConnection {
 		
 		try {
 			messages = (ArrayList<Message>) in.readObject();
+			for (int i=0 ; i<messages.size() ; i++) {
+				messages.set(i, Encryption.decrypt(messages.get(i), decryptionKey));
+			}
 		} catch (ClassNotFoundException e) {
 			return null;
 		}
@@ -131,5 +142,13 @@ public class ClientConnection {
 	@Override
 	public String toString() {
 		return serverAddress + ":" + serverPort;
+	}
+
+	public void setEncryptionKey(PublicKey key) {
+		this.encryptionKey = key;
+	}
+	
+	public void setDecryptionKey(PrivateKey key) {
+		this.decryptionKey = key;
 	}
 }
