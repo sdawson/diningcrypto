@@ -1,9 +1,10 @@
 package client;
 
+import gui.GuiManager;
+
 import javax.swing.JOptionPane;
 
 import crypto.DiningLoop;
-import gui.GuiManager;
 
 /**
  * The main function that runs the GUI-based client,

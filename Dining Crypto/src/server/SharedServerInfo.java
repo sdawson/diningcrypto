@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import communication.CommunicationProtocol;
-import communication.Key;
-import communication.KeySet;
-import communication.Keyop;
+import communication.DiningKey;
+import communication.DiningKeyOp;
+import communication.DiningKeySet;
 import communication.Message;
 
 /** The set of information that needs to be shared
@@ -24,7 +24,7 @@ public class SharedServerInfo {
 	private ArrayList<ClientSocketInfo> clients = new ArrayList<ClientSocketInfo>(),
 			newClients = new ArrayList<ClientSocketInfo>(),
 			clientsToRemove = new ArrayList<ClientSocketInfo>();
-	private KeySet[] keysets = null;
+	private DiningKeySet[] keysets = null;
 	
 	public SharedServerInfo(int noOfReplies, ArrayList<Message> currentRoundMessages) {
 		this.noSent = noOfReplies;
@@ -82,33 +82,34 @@ public class SharedServerInfo {
 		new ServerThread(this, newClient).start();
 	}
 	
-	public synchronized KeySet getKeySet() {
+	public synchronized DiningKeySet getKeySet() {
 		if (keysets == null || keysDistributed == clients.size()) {
 			
 		}
 		
-		KeySet set = keysets[keysDistributed];
+		DiningKeySet set = keysets[keysDistributed];
 		keysDistributed++;
 		
 		return set; 
 	}
 	
 	private void generateKeySets() {
+		System.out.println("Generating keys " + clients.size()); System.out.flush();
 		// Create a set for each client
-		keysets = new KeySet[clients.size()];
+		keysets = new DiningKeySet[clients.size()];
 		for (int i=0 ; i<clients.size() ; i++ ) {
-			keysets[i] = new KeySet();
+			keysets[i] = new DiningKeySet();
 		}
 		
 		// Populate each set
 		for (int i=0 ; i<clients.size()-1 ; i++) {
 			for (int j=i+1 ; j<clients.size() ; j++) {
 				// Create the key
-				Key k = Key.generateRandomKey();
+				DiningKey k = DiningKey.generateRandomKey();
 				
 				// Set the keyops
-				Key kp = new Key(k.getKey(), Keyop.ADD),
-					kn = new Key(k.getKey(), Keyop.SUBTRACT);
+				DiningKey kp = new DiningKey(k.getKey(), DiningKeyOp.ADD),
+					kn = new DiningKey(k.getKey(), DiningKeyOp.SUBTRACT);
 				
 				// Add the keys to the sets
 				keysets[i].addKey(kp);
@@ -152,12 +153,13 @@ public class SharedServerInfo {
 				
 			} catch (InterruptedException e) {/* Continue */}
 		} else {
+			// Add any new clients.
 			for (ClientSocketInfo newClient : newClients) {
 				clients.add(newClient);
 			}
 			newClients.clear();
-			resetStart();
 			
+			// Remove any dead clients.
 			for (ClientSocketInfo deadClient : clientsToRemove) {
 				clients.remove(deadClient);
 			}
@@ -167,6 +169,8 @@ public class SharedServerInfo {
 			generateKeySets();
 			keysDistributed = 0;
 			System.out.println("done start"); System.out.flush();
+
+			resetStart();
 			notifyAll();
 		}
 	}
