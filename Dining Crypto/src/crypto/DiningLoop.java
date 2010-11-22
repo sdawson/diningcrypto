@@ -25,7 +25,7 @@ import communication.Message;
  *
  */
 public class DiningLoop implements Input {
-	private final static int MAX_WAIT = 10;
+	private final static int MAX_WAIT = 10, THROTTLE_WAIT = 200;
 	
 	private final ClientConnection connection;
 	private Output guiRef = null;
@@ -81,7 +81,7 @@ public class DiningLoop implements Input {
 					if(inMessage) {
 						try {
 							// No message is being sent so slow down the loop.
-							Thread.sleep(200);
+							Thread.sleep(THROTTLE_WAIT);
 						} catch (InterruptedException e) {/* Continue */}
 					}
 					
