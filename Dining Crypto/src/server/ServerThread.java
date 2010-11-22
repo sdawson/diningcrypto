@@ -10,7 +10,6 @@ import communication.Message;
 
 /**
  * The ServerThread class represents
- * @author soph
  *
  */
 public class ServerThread extends Thread {
