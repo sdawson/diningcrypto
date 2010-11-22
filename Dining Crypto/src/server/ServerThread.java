@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import communication.CommunicationProtocol;
-import communication.KeySet;
+import communication.DiningKeySet;
 import communication.Message;
 
 /**
@@ -120,7 +120,7 @@ public class ServerThread extends Thread {
 
 	private void sendKeys(ClientSocketInfo client) throws IOException {
 		// Get the keyset for this round
-		KeySet key = sharedInfo.getKeySet();
+		DiningKeySet key = sharedInfo.getKeySet();
 		
 		// Send the KeySet to the client
 		client.send(key);

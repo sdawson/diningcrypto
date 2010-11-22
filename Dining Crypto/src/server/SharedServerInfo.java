@@ -2,9 +2,9 @@ package server;
 
 import java.util.ArrayList;
 
-import communication.Key;
-import communication.KeySet;
-import communication.Keyop;
+import communication.DiningKey;
+import communication.DiningKeySet;
+import communication.DiningKeyOp;
 import communication.Message;
 
 /** The set of information that needs to be shared
@@ -19,7 +19,7 @@ import communication.Message;
 public class SharedServerInfo {
 	private int noSent = 0, numberClients, keysDistributed = 0;
 	private ArrayList<Message> currentRoundMessages;
-	private KeySet[] keysets = null;
+	private DiningKeySet[] keysets = null;
 	
 	public SharedServerInfo(int noOfReplies, int numberClients,
 			ArrayList<Message> currentRoundMessages) {
@@ -60,13 +60,13 @@ public class SharedServerInfo {
 		this.currentRoundMessages.clear();
 	}
 	
-	public synchronized KeySet getKeySet() {
+	public synchronized DiningKeySet getKeySet() {
 		if (keysDistributed == numberClients) {
 			generateKeySets();
 			keysDistributed = 0;
 		}
 		
-		KeySet set = keysets[keysDistributed];
+		DiningKeySet set = keysets[keysDistributed];
 		keysDistributed++;
 		
 		return set; 
@@ -74,20 +74,20 @@ public class SharedServerInfo {
 	
 	public void generateKeySets() {
 		// Create a set for each client
-		keysets = new KeySet[numberClients];
+		keysets = new DiningKeySet[numberClients];
 		for (int i=0 ; i<numberClients ; i++ ) {
-			keysets[i] = new KeySet();
+			keysets[i] = new DiningKeySet();
 		}
 		
 		// Populate each set
 		for (int i=0 ; i<numberClients-1 ; i++) {
 			for (int j=i+1 ; j<numberClients ; j++) {
 				// Create the key
-				Key k = Key.generateRandomKey();
+				DiningKey k = DiningKey.generateRandomKey();
 				
 				// Set the keyops
-				Key kp = new Key(k.getKey(), Keyop.ADD),
-					kn = new Key(k.getKey(), Keyop.SUBTRACT);
+				DiningKey kp = new DiningKey(k.getKey(), DiningKeyOp.ADD),
+					kn = new DiningKey(k.getKey(), DiningKeyOp.SUBTRACT);
 				
 				// Add the keys to the sets
 				keysets[i].addKey(kp);

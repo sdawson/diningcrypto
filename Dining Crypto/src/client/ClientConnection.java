@@ -8,7 +8,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
-import communication.KeySet;
+import communication.DiningKeySet;
 import communication.Message;
 
 /**
@@ -88,10 +88,10 @@ public class ClientConnection {
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
-	public KeySet receiveKeySet() throws IOException, ClassNotFoundException {
-		KeySet keyset = null;
+	public DiningKeySet receiveKeySet() throws IOException, ClassNotFoundException {
+		DiningKeySet keyset = null;
 
-		keyset = (KeySet) in.readObject();
+		keyset = (DiningKeySet) in.readObject();
 		return keyset;
 	}
 	

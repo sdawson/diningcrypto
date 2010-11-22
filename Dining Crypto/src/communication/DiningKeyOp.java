@@ -9,7 +9,7 @@ import java.io.Serializable;
  * @author Sophie Dawson
  *
  */
-public enum Keyop implements Serializable {
+public enum DiningKeyOp implements Serializable {
 	ADD,
 	SUBTRACT;
 }

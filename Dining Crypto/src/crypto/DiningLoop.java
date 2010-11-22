@@ -12,7 +12,7 @@ import utility.StrBuffer;
 import client.ClientConnection;
 
 import communication.CommunicationProtocol;
-import communication.KeySet;
+import communication.DiningKeySet;
 import communication.Message;
 
 /**
@@ -64,7 +64,7 @@ public class DiningLoop implements Input {
 		while (true) {
 			try {
 				// Get keyset for the round
-				KeySet keys = getKeySet();
+				DiningKeySet keys = getKeySet();
 				if (keys == null) {
 					// Something has gone wrong or we've
 					// received a shutdown command.
@@ -155,8 +155,8 @@ public class DiningLoop implements Input {
 		return (char)sum;
 	}
 	
-	private KeySet getKeySet() throws IOException {
-		KeySet keys = null;
+	private DiningKeySet getKeySet() throws IOException {
+		DiningKeySet keys = null;
 		try {
 			 keys = connection.receiveKeySet();
 		} catch (ClassNotFoundException e) {
@@ -222,7 +222,7 @@ public class DiningLoop implements Input {
 		return sb.toString();
 	}
 	
-	private void transmit(char c, KeySet keys) throws IOException {
+	private void transmit(char c, DiningKeySet keys) throws IOException {
 		/*
 		 * Send the message (or nothing, if the client doesn't want to
 		 * send anything this round.

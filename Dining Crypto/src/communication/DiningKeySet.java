@@ -15,18 +15,18 @@ import java.util.Set;
  * @author Sophie Dawson
  *
  */
-public class KeySet implements Serializable {
+public class DiningKeySet implements Serializable {
 	private static final long serialVersionUID = 5671467559046189587L;
-	private HashSet<Key> keys = new HashSet<Key>();
+	private HashSet<DiningKey> keys = new HashSet<DiningKey>();
 	
-	public KeySet() {
+	public DiningKeySet() {
 	}
 	
 	/**
 	 * Adds a key to the keyset
 	 * @param key The key to be added
 	 */
-	public void addKey(Key key) {
+	public void addKey(DiningKey key) {
 		keys.add(key);
 	}
 	
@@ -34,15 +34,15 @@ public class KeySet implements Serializable {
 	 * Returns the current set of keys
 	 * @return A Set object containing all the keys
 	 */
-	public Set<Key> getKeySet() {
+	public Set<DiningKey> getKeySet() {
 		return keys;
 	}
 	
 	public int sum() {
 		if (keys != null) {
 			int sum = 0;
-			for (Key k : keys) {
-				if ( k.getKeyop()==Keyop.ADD)
+			for (DiningKey k : keys) {
+				if ( k.getKeyop()==DiningKeyOp.ADD)
 					sum += k.getKey();
 				else
 					sum -= k.getKey();
@@ -56,7 +56,7 @@ public class KeySet implements Serializable {
 
 	public String toString() {
 		String str = "[";
-		for (Key k : keys) {
+		for (DiningKey k : keys) {
 			str = str + k.toString() + ",";
 		}
 		

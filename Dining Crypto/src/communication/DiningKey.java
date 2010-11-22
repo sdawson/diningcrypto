@@ -12,13 +12,13 @@ import utility.RandomGenerator;
  * @author Joshua Torrance
  *
  */
-public class Key implements Serializable {
+public class DiningKey implements Serializable {
 	private static final long serialVersionUID = -709609931265527197L;
 	
 	private final int key;
-	private final Keyop op;
+	private final DiningKeyOp op;
 	
-	public Key(int key, Keyop op) {
+	public DiningKey(int key, DiningKeyOp op) {
 		this.key = key;
 		this.op = op;
 	}
@@ -27,20 +27,20 @@ public class Key implements Serializable {
 		return this.key;
 	}
 	
-	public Keyop getKeyop() {
+	public DiningKeyOp getKeyop() {
 		return this.op;
 	}
 	
 	/**
 	 * Generates a random key with a key operation of null.
 	 */
-	public static Key generateRandomKey() {
-		return new Key(RandomGenerator.generateInt(), null);
+	public static DiningKey generateRandomKey() {
+		return new DiningKey(RandomGenerator.generateInt(), null);
 	}
 	
 	public String toString() {
 		String str = "(" + key + ",";
-		if (op == Keyop.ADD)
+		if (op == DiningKeyOp.ADD)
 			str = str + "+";
 		else
 			str = str + "-";

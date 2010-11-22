@@ -6,7 +6,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 
-import communication.KeySet;
+import communication.DiningKeySet;
 import communication.Message;
 
 /**
@@ -65,7 +65,7 @@ public class ClientSocketInfo {
 	 * @param keys The keyset object to send.
 	 * @throws IOException
 	 */
-	public void send(KeySet keys) throws IOException {
+	public void send(DiningKeySet keys) throws IOException {
 		out.writeObject(keys);
 	}
 
