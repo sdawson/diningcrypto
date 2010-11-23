@@ -6,9 +6,9 @@ import interfaces.Output;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.SocketException;
-import java.security.SecureRandom;
 import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
+import java.util.Random;
 
 import utility.StrBuffer;
 import client.ClientConnection;
@@ -25,14 +25,17 @@ import communication.Message;
  *
  */
 public class DiningLoop implements Input {
-	private final static int MAX_WAIT = 10, THROTTLE_WAIT = 200;
+	private final static int MAX_WAIT = 20, THROTTLE_WAIT = 500;
+	private final static char NULL_CHAR = (char)0;
 	
 	private final ClientConnection connection;
-	private Output guiRef = null;
+	private Output guiRef;
 	
 	private StrBuffer inputBuf = new StrBuffer(20);
 	private String currentMessage = null;
-	private int currentMessageIndex = 0;
+	private int currentMessageIndex = 0, collisionWait = 0;
+	
+	private boolean inMessage = false, sendingMessage = false;
 		
 	public DiningLoop(ClientConnection connection, Output output) {
 		this.connection = connection;
@@ -60,7 +63,6 @@ public class DiningLoop implements Input {
 	public void run() {
 		Message received;
 		ArrayList<Message> roundResults;
-		boolean inMessage = false;
 		String outputMessage = new String();
 		
 		// Receive the public key from the server.
@@ -75,10 +77,10 @@ public class DiningLoop implements Input {
 					// received a shutdown command.
 					break;
 				}
-				
+
 				received = connection.receiveMessage();
 				if (received.getMessage().equals(CommunicationProtocol.START_ROUND)) {
-					if(inMessage) {
+					if(!inMessage) {
 						try {
 							// No message is being sent so slow down the loop.
 							Thread.sleep(THROTTLE_WAIT);
@@ -90,12 +92,23 @@ public class DiningLoop implements Input {
 					// has occurred.  In the case of a collision wait
 					// until a random number of rounds has passed before
 					// resending.
-					transmit(getNextChar(), keys);
+					if (collisionWait==0) {
+						if (inMessage==false || sendingMessage==true) {
+							// Only transmit if no one else is and we're not waiting to resolve a collision.
+							char nextChar = getNextChar();
+							transmit(nextChar, keys);
+						} else {
+							transmit(NULL_CHAR, keys);
+						}
+					} else {
+						transmit(NULL_CHAR, keys);
+						collisionWait--;
+					}
 					
 					// Waiting for the result of the round
 					roundResults = connection.receiveRoundResults();
 					if (roundResults.size()==0) {
-						System.err.println("roundresults has size zero!!! exiting");
+						System.out.println("Error receiving results from server. Exiting.");
 						System.exit(0);
 					}
 					
@@ -103,17 +116,19 @@ public class DiningLoop implements Input {
 					connection.send(new Message(CommunicationProtocol.ACK));
 					
 					// Collate the results for the round
-					char r = collate(roundResults, outputMessage);
+					char result = collate(roundResults, outputMessage);
 					
-					if (r!=0) {
+					if (result!=0) {
 						// Add the result to the output array
 						// for printing once the whole message
 						// is received
-						outputMessage = outputMessage + String.valueOf(r);
+						guiRef.outputString("" + result);
 						inMessage = true;
-					} else if ( inMessage ) {
-						guiRef.outputString(outputMessage.toString() + "\n");
-						outputMessage = "";
+					} else {
+						if (inMessage) {
+							guiRef.outputString("\n");
+						}
+
 						inMessage = false;
 					}
 				} else if (received.getMessage().equals(CommunicationProtocol.SHUTDOWN)) {
@@ -139,12 +154,7 @@ public class DiningLoop implements Input {
 		}
 	}
 	
-	/* Need to check if we are already in a collision.
-	 * if this is the first collision, then set the round
-	 * counter starting.  if isCollision already true
-	 */
-	private char collate(ArrayList<Message> messages,
-			String outputMessage) {
+	private char collate(ArrayList<Message> messages, String outputMessage) {
 		int sum = 0;	
 
 		for (Message m : messages) {
@@ -155,15 +165,9 @@ public class DiningLoop implements Input {
 			// no message has been transmitted
 		} else if (sum > 2*Character.MAX_VALUE) {
 			// There is a collision.
-			/* Adds a random delay to the buffer that
-			 * collided, so that the collision can be resolved.
-			 */
-			// TODO: put currentMessage set inside addDelay func
-			currentMessage = addDelayToBuffer();
-			outputMessage = new String();
+			dealWithCollision();
 			
-			// Also don't want to print the collision,
-			// since it's usually a non-alphanumeric char
+			// Also don't want to print the result.
 			sum = 0;
 		} else {
 			sum -= Character.MAX_VALUE;
@@ -172,6 +176,15 @@ public class DiningLoop implements Input {
 		return (char)sum;
 	}
 	
+	private void dealWithCollision() {
+		if (sendingMessage) {
+			Random rand = new Random();
+			collisionWait = rand.nextInt(MAX_WAIT);
+			sendingMessage = false;
+			currentMessageIndex = 0;
+		}
+	}
+
 	private DiningKeySet getKeySet() throws IOException {
 		DiningKeySet keys = null;
 		try {
@@ -195,49 +208,23 @@ public class DiningLoop implements Input {
 		}
 		
 		if (currentMessage == null) {
-			return (char)0;
+			return NULL_CHAR;
 		} else {
 			if (currentMessageIndex < currentMessage.length()) {
+				sendingMessage = true;
 				char ret =  currentMessage.charAt(currentMessageIndex);
 				currentMessageIndex++;
 				return ret;
 			} else {
 				// Reached the end of the currentMessage
+				sendingMessage = false;
+				
 				currentMessage = null;
 				currentMessageIndex = 0;
 				
-				return (char)0;
+				return NULL_CHAR;
 			}
 		}
-	}
-	
-	private String addDelayToBuffer() {
-		// The extra 0 is just to pad out the section where
-		// the original value in the message used to be, since
-		// the index always gets higher (and otherwise you'll
-		// always have a delay one short of what was randomly
-		// generated.
-		SecureRandom rand = new SecureRandom();
-		
-		char nothing = (char) 0;
-		int delay = rand.nextInt(MAX_WAIT);
-		System.out.println("delay size: " + delay);
-		String messageDelay = repeat(String.valueOf(nothing), delay);
-		StringBuilder sb = new StringBuilder(currentMessage);
-		
-		sb.insert(0, messageDelay);
-		// Reset the counter used to send message
-		currentMessageIndex = 0;
-
-		return sb.toString();
-	}
-	
-	private String repeat(String s, int n) {
-		final StringBuilder sb = new StringBuilder();
-		for (int i=0; i<n; i++) {
-			sb.append(s);
-		}
-		return sb.toString();
 	}
 	
 	private void transmit(char c, DiningKeySet keys) throws IOException {
