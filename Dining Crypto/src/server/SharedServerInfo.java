@@ -106,6 +106,7 @@ public class SharedServerInfo {
 	}
 	
 	private void generateKeySets() {
+		System.out.println("Generating keys for " + clients.size() + " clients."); System.out.flush();
 		// Create a set for each client
 		keysets = new DiningKeySet[clients.size()];
 		for (int i=0 ; i<clients.size() ; i++ ) {
@@ -156,7 +157,9 @@ public class SharedServerInfo {
 		incrementStart();
 		if (getStart() < getNumberClients() + newClients.size()) {
 			try {
-				wait();
+				do {
+					wait(200);
+				} while (getStart() < getNumberClients() + newClients.size() && getStart()!=0);
 				
 			} catch (InterruptedException e) {/* Continue */}
 		} else {
