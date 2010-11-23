@@ -106,7 +106,6 @@ public class SharedServerInfo {
 	}
 	
 	private void generateKeySets() {
-		System.out.println("Generating keys for " + clients.size() + " clients."); System.out.flush();
 		// Create a set for each client
 		keysets = new DiningKeySet[clients.size()];
 		for (int i=0 ; i<clients.size() ; i++ ) {
