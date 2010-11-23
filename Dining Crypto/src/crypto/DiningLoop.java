@@ -138,18 +138,16 @@ public class DiningLoop implements Input {
 					break;
 				}
 			} catch (EOFException e) {
-				/* 
-				 * This is expected behaviour, since it indicates
-				 * one of the other clients/the server has disconnected. 
-				 */
-				
-				// TODO: do something about this exception
+				System.out.println("EOFException. Exiting.");
+				e.printStackTrace();
+				System.exit(1);
 			} catch (SocketException e) {
 				System.out.println("Lost connection to the server. Exiting.");
 				System.exit(1);
 			} catch (IOException e) {
-				// TODO: do something about this exception
+				System.out.println("IOException. Exiting.");
 				e.printStackTrace();
+				System.exit(1);
 			}
 		}
 	}
