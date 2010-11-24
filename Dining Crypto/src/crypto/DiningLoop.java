@@ -41,31 +41,12 @@ public class DiningLoop implements Input {
 		this.connection = connection;
 		this.guiRef = output;
 	}
-	
-	/**
-	 * Starts running the client operation loop.
-	 * This consists of the following repeated steps:
-	 *  - Get a keyset for the round from the server
-	 *  - Acknowledge the receipt of the keyset
-	 *  - Wait for the server to indicate the current round
-	 *    has started
-	 *  - Send any client-submitted input to the server
-	 *    (this will also be enciphered using the keyset
-	 *    previously obtained)
-	 *  - Receive the result of the round from the server
-	 *    and display it
-	 *  Note: As the loop is running the client also checks
-	 *  to see if the server has send out a shutdown message,
-	 *  and if so the client breaks out of the operation loop
-	 *  and lets the calling class close the client-server
-	 *  connection. 
-	 */
+
 	public void run() {
-		Message received;
 		ArrayList<Message> roundResults;
-		String outputMessage = new String();
+		Message received;
 		
-		// Receive the public key from the server.
+		// Get the public key from the server.
 		getKey();
 		
 		while (true) {
@@ -80,59 +61,19 @@ public class DiningLoop implements Input {
 
 				received = connection.receiveMessage();
 				if (received.getMessage().equals(CommunicationProtocol.START_ROUND)) {
-					if(!inMessage) {
-						try {
-							// No message is being sent so slow down the loop.
-							Thread.sleep(THROTTLE_WAIT);
-						} catch (InterruptedException e) {/* Continue */}
-					}
+					throttle();
 					
-					
-					// Transmit the next character, unless a collision
-					// has occurred.  In the case of a collision wait
-					// until a random number of rounds has passed before
-					// resending.
-					if (collisionWait==0) {
-						if (inMessage==false || sendingMessage==true) {
-							// Only transmit if no one else is and we're not waiting to resolve a collision.
-							char nextChar = getNextChar();
-							transmit(nextChar, keys);
-						} else {
-							transmit(NULL_CHAR, keys);
-						}
-					} else {
-						transmit(NULL_CHAR, keys);
-						collisionWait--;
-					}
+					// Send this rounds output to the server.
+					sendOutput(keys);
 					
 					// Waiting for the result of the round
-					roundResults = connection.receiveRoundResults();
-					if (roundResults.size()==0) {
-						System.out.println("Error receiving results from server. Exiting.");
-						System.exit(0);
-					}
+					roundResults = getResults();
 					
 					// Otherwise acknowledge that the result has been received
 					connection.send(new Message(CommunicationProtocol.ACK));
 					
 					// Collate the results for the round
-					char result = collate(roundResults, outputMessage);
-					
-					if (result!=0) {
-						// Add the result to the output array
-						// for printing once the whole message
-						// is received
-						guiRef.outputString("" + result);
-						inMessage = true;
-					} else {
-						if (inMessage) {
-							guiRef.outputString("\n");
-						}
-
-						inMessage = false;
-					}
-				} else if (received.getMessage().equals(CommunicationProtocol.SHUTDOWN)) {
-					break;
+					outputResults(roundResults);
 				} else {
 					System.err.println("Server has asked something unexpected");
 					break;
@@ -152,6 +93,67 @@ public class DiningLoop implements Input {
 		}
 	}
 	
+	private void outputResults(ArrayList<Message> roundResults) {
+		String outputMessage = new String();
+		char result = collate(roundResults, outputMessage);
+		
+		if (result!=0) {
+			// Add the result to the output array
+			// for printing once the whole message
+			// is received
+			guiRef.outputString("" + result);
+			inMessage = true;
+		} else {
+			if (inMessage) {
+				guiRef.outputString("\n");
+			}
+
+			inMessage = false;
+		}
+		
+	}
+
+	private ArrayList<Message> getResults() throws IOException {
+		ArrayList<Message> results = connection.receiveRoundResults();
+		if (results.size()==0) {
+			System.out.println("Error receiving results from server. Exiting.");
+			System.exit(0);
+		}
+		
+		return results;
+	}
+
+	private void sendOutput(DiningKeySet keys) throws IOException {
+		// Transmit the next character, unless a collision
+		// has occurred.  In the case of a collision wait
+		// until a random number of rounds has passed before
+		// resending.
+		if (collisionWait==0) {
+			if (inMessage==false || sendingMessage==true) {
+				// Only transmit if no one else is and we're not waiting to resolve a collision.
+				char nextChar = getNextChar();
+				transmit(nextChar, keys);
+			} else {
+				transmit(NULL_CHAR, keys);
+			}
+		} else {
+			transmit(NULL_CHAR, keys);
+			collisionWait--;
+		}
+	}
+
+	/**
+	 * If the client is not currently sending or receiving a message then wait.
+	 */
+	private void throttle() {
+		if(!inMessage) {
+			try {
+				// No message is being sent so slow down the loop.
+				Thread.sleep(THROTTLE_WAIT);
+			} catch (InterruptedException e) {/* Continue */}
+		}
+	}
+
 	private char collate(ArrayList<Message> messages, String outputMessage) {
 		int sum = 0;	
 
@@ -241,7 +243,7 @@ public class DiningLoop implements Input {
 		connection.send(new Message("" +  output));
 	}
 
-	public void getKey() {
+	private void getKey() {
 			RSAPublicKey publicKey = null;
 			try {
 				publicKey = connection.receiveKey();

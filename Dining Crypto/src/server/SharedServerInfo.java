@@ -141,7 +141,7 @@ public class SharedServerInfo {
 
 	public synchronized void waitForOutputsToBeSent() {
 		incrementSent();
-		if (getSent() < getNumberClients()) {
+		if (getSent() < getNumberClients() - clientsToRemove.size()) {
 			try {
 				wait();
 			} catch (InterruptedException e) {/* Continue */}
@@ -154,7 +154,7 @@ public class SharedServerInfo {
 
 	public synchronized void checkForNewClients() {
 		incrementStart();
-		if (getStart() < getNumberClients() + newClients.size()) {
+		if (getStart() < getNumberClients() + newClients.size() - clientsToRemove.size()) {
 			try {
 				do {
 					wait(200);
