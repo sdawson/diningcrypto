@@ -28,12 +28,6 @@ public class ServerThread extends Thread {
 	}
 
 	public void run() {
-		/*
-		 * Want to start doing message passing rounds once a decent number (3
-		 * for a start) of clients have actually connected. This limit can be
-		 * changed, but need to stop letting them in at some stage so that the
-		 * server can calculate key-pairs etc.
-		 */
 		try {
 			// Send the public key to the client.
 			sendKey();
